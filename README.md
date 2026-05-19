@@ -7,8 +7,7 @@
 
 ## 🌐 Live Preview
 
-*(Add GitHub Pages link here after hosting)*
-👉 mohityadav8.github.io/E-Commerce/
+anthropicbots.github.io/E-commerce
 
 <img width="1919" height="908" alt="image" src="https://github.com/user-attachments/assets/4e892f45-af7d-4300-8f41-3c761b82103f" />
 

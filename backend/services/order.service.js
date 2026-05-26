@@ -2,7 +2,8 @@
 const validatedItems = [];
 
 // secure total
-let calculatedTotal = 0;
+let calculatedTotal =
+    0;
 
 // validate each item from database
 const validationPromises =
@@ -19,12 +20,30 @@ const validationPromises =
                     validationReject
                 ) => {
 
+                    // validate item id
+                    const productId =
+                        safeInteger(
+                            item.id
+                        );
+
+                    if (
+                        productId <= 0
+                    ) {
+
+                        return validationReject(
+                            new Error(
+                                "Invalid product ID"
+                            )
+                        );
+                    }
+
                     const productQuery = `
                         SELECT
                             id,
                             name,
                             price,
-                            stock
+                            stock,
+                            image
                         FROM products
                         WHERE id = ?
                         LIMIT 1
@@ -33,13 +52,14 @@ const validationPromises =
                     connection.query(
                         productQuery,
                         [
-                            item.id
+                            productId
                         ],
                         (
                             productError,
                             productResults
                         ) => {
 
+                            // query error
                             if (
                                 productError
                             ) {
@@ -49,39 +69,45 @@ const validationPromises =
                                 );
                             }
 
+                            const safeResults =
+                                safeArray(
+                                    productResults
+                                );
+
                             // product not found
                             if (
-                                !safeArray(
-                                    productResults
-                                ).length
+                                !safeResults.length
                             ) {
 
                                 return validationReject(
                                     new Error(
-                                        `Product not found: ${item.id}`
+                                        `Product not found: ${productId}`
                                     )
                                 );
                             }
 
                             const product =
-                                productResults[0];
+                                safeResults[0];
 
                             const qty =
                                 Math.max(
                                     1,
                                     safeInteger(
-                                        item.qty
+                                        item.qty,
+                                        1
                                     )
                                 );
 
                             // stock validation
                             if (
-                                product.stock < qty
+                                safeInteger(
+                                    product.stock
+                                ) < qty
                             ) {
 
                                 return validationReject(
                                     new Error(
-                                        `Insufficient stock for ${product.name}`
+                                        `Insufficient stock for ${sanitizeString(product.name)}`
                                     )
                                 );
                             }
@@ -104,15 +130,22 @@ const validationPromises =
                                     ).toFixed(2)
                                 );
 
-                            // save validated item
+                            // validated item
                             validatedItems.push({
 
                                 id:
-                                    product.id,
+                                    safeInteger(
+                                        product.id
+                                    ),
 
                                 name:
                                     sanitizeString(
                                         product.name
+                                    ),
+
+                                image:
+                                    sanitizeString(
+                                        product.image
                                     ),
 
                                 price:

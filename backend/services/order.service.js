@@ -16,8 +16,7 @@ const {
 const createOrderService =
     (
         connection,
-        userId,
-        items
+        orderData
     ) => {
 
         return new Promise(
@@ -28,6 +27,7 @@ const createOrderService =
 
                 try {
 
+                    const { user_id, customer_name, customer_email, customer_phone, city, state, zip, full_address, payment_method, items } = orderData;
                     // validated items
                     const validatedItems = [];
 
@@ -211,47 +211,91 @@ const createOrderService =
                     const orderQuery = `
                         INSERT INTO orders (
                             user_id,
+                            customer_name,
+                            customer_email,
+                            customer_phone,
+                            city,
+                            state,
+                            zip,
+                            full_address,
+                            payment_method,
                             total,
-                            items,
                             status
                         )
-                        VALUES (?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     `;
 
                     connection.query(
                         orderQuery,
                         [
-                            safeInteger(
-                                userId
-                            ),
-
+                            safeInteger(user_id),
+                            customer_name,
+                            customer_email,
+                            customer_phone,
+                            city,
+                            state,
+                            zip,
+                            full_address,
+                            payment_method,
                             calculatedTotal,
-
-                            JSON.stringify(
-                                validatedItems
-                            ),
-
                             "pending"
                         ],
-                        (
+                        async (
                             orderError,
                             orderResult
                         ) => {
-
-                            // rollback
-                            if (
-                                orderError
-                            ) {
-
-                                return connection.rollback(
-                                    () => {
-
-                                        reject(
-                                            orderError
-                                        );
-                                    }
-                                );
+                            // rollback on order error
+                            if (orderError) {
+                                return connection.rollback(() => {
+                                    reject(orderError);
+                                });
                             }
+
+                            const orderId = orderResult.insertId;
+
+                            // insert into order_items
+                            const itemInsertPromises = validatedItems.map(item => {
+                                return new Promise((itemResolve, itemReject) => {
+                                    const itemQuery = `
+                                        INSERT INTO order_items (
+                                            order_id,
+                                            product_id,
+                                            name,
+                                            price,
+                                            qty,
+                                            color,
+                                            size
+                                        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                                    `;
+                                    connection.query(
+                                        itemQuery,
+                                        [
+                                            orderId,
+                                            item.id,
+                                            item.name,
+                                            item.price,
+                                            item.qty,
+                                            item.color,
+                                            item.size
+                                        ],
+                                        (itemError) => {
+                                            if (itemError) {
+                                                return itemReject(itemError);
+                                            }
+                                            itemResolve();
+                                        }
+                                    );
+                                });
+                            });
+
+                            try {
+                                await Promise.all(itemInsertPromises);
+                            } catch (itemInsertError) {
+                                return connection.rollback(() => {
+                                    reject(itemInsertError);
+                                });
+                            }
+
 
                             // reduce stock
                             const stockPromises =

@@ -118,8 +118,19 @@ const createOrder =
             const result =
                 await createOrderService(
                     connection,
-                    req.user.id,
-                    items
+                    {
+                        user_id: req.user.id,
+                        customer_name: sanitizeString(customer.name),
+                        customer_email: sanitizeString(customer.email),
+                        customer_phone: sanitizeString(customer.phone),
+                        city: sanitizeString(address.city),
+                        state: sanitizeString(address.state),
+                        zip: sanitizeString(address.zip),
+                        full_address: sanitizeString(address.fullAddress),
+                        payment_method: sanitizeString(paymentMethod).toLowerCase(),
+                        total: safeNumber(total),
+                        items
+                    }
                 );
 
             return res.status(201)

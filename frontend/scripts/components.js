@@ -103,6 +103,7 @@ async function initializeComponents() {
     );
 }
 
+
 // init
 document.addEventListener(
     "DOMContentLoaded",

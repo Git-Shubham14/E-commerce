@@ -185,7 +185,7 @@ function renderEmptyState(message) {
             <div class="empty-state-icon">${isError ? '📡' : '🛍️'}</div>
             <h3 class="empty-state-title">${isError ? "Couldn't load products" : "No products found"}</h3>
             <p class="empty-state-message">${isError ? "Please check your connection and try again." : message}</p>
-            ${isError ? `<button class="retry-btn" onclick="fetchProducts(1)">🔄 Retry</button>` : ''}
+            ${isError ? `<button class="retry-btn" onclick="window.fetchProducts(1)">🔄 Retry</button>` : ''}
         </div>
     `;
 }
@@ -785,5 +785,6 @@ document.addEventListener(
         setupSorting();
     }
 );
+window.fetchProducts = fetchProducts;
 })()
 

@@ -139,19 +139,6 @@ const removeStorage = (
 };
 
 // auth helpers
-const getToken = () => {
-
-    return localStorage.getItem(
-        CONFIG.STORAGE_KEYS.TOKEN
-    );
-};
-
-const getRefreshToken = () => {
-
-    return localStorage.getItem(
-        CONFIG.STORAGE_KEYS.REFRESH_TOKEN
-    );
-};
 
 const getUser = () => {
 
@@ -178,15 +165,10 @@ const clearAuthData = () => {
 
 const requireAuth = () => {
 
-    const token =
-        getToken();
-
     const user =
         getUser();
 
     if (
-        !token
-        ||
         !user
     ) {
 
@@ -216,18 +198,6 @@ const refreshAccessToken =
     async () => {
 
         try {
-
-            const refreshToken =
-                getRefreshToken();
-
-            if (
-                !refreshToken
-            ) {
-
-                clearAuthData();
-
-                return null;
-            }
 
             const response =
                 await fetch(
@@ -269,18 +239,7 @@ const refreshAccessToken =
 
             return data.success ? true : null;
 
-            // save user
-            if (
-                data.user
-            ) {
 
-                setJSON(
-                    CONFIG.STORAGE_KEYS.USER,
-                    data.user
-                );
-            }
-
-            return data.accessToken;
 
         } catch (error) {
 
@@ -327,20 +286,10 @@ const apiRequest =
 
         try {
 
-            const token =
-                getToken();
-
             const headers = {
 
                 "Content-Type":
                     "application/json",
-
-                ...(token
-                    ? {
-                        Authorization:
-                            `Bearer ${token}`
-                    }
-                    : {}),
 
                 ...(options.headers || {})
             };
@@ -726,8 +675,7 @@ window.AppUtils = {
     getJSON,
     setJSON,
     removeStorage,
-    getToken,
-    getRefreshToken,
+
     getUser,
     clearAuthData,
     requireAuth,

@@ -472,18 +472,7 @@ function initializeAuthUI() {
         return;
     }
 
-    const token =
-        AppUtils.getToken();
-    
-    // invalid token cleanup
-    if (
-        token
-        &&
-        !AppUtils.getUser()
-    ) {
-
-        AppUtils.clearAuthData();
-    }
+    const user = AppUtils.getUser();
 
     const socialUser =
         AppUtils.getJSON(
@@ -492,7 +481,7 @@ function initializeAuthUI() {
         );
 
     if (
-        token
+        user
         || socialUser
     ) {
         authLink.innerHTML =

@@ -95,8 +95,6 @@ function sendAuthResponse(
         .json({
             success: true,
             message,
-            accessToken,
-            refreshToken,
             user: {
                 id: user.id,
                 name: user.name,

@@ -220,7 +220,7 @@
                             checked
                         >
 
-                        . . Credit / Debit Card
+                        Credit / Debit Card
 
                     </label>
 
@@ -232,7 +232,7 @@
                             value="upi"
                         >
 
-                        . . UPI Payment
+                        UPI Payment
 
                     </label>
 
@@ -244,20 +244,20 @@
                             value="cod"
                         >
 
-                       . . Cash On Delivery
+                        Cash On Delivery
 
                     </label>
 
                 </div>
 
-                <!-- Card -->
-
+                <!-- Card Details (with required) -->
                 <div id="card-details">
 
                     <input
                         type="text"
                         id="card-number"
                         placeholder="Card Number"
+                        required
                     >
 
                     <div class="form-row">
@@ -266,12 +266,14 @@
                             type="text"
                             id="expiry"
                             placeholder="MM/YY"
+                            required
                         >
 
                         <input
                             type="password"
                             id="cvv"
                             placeholder="CVV"
+                            required
                         >
 
                     </div>

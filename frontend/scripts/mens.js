@@ -15,7 +15,7 @@
     // 2. HARDCODED FALLBACK DATA (Backend offline hone par yeh show hoga)
     const fallbackProducts = [
         { 
-            id: 'm1', 
+            id: '101', 
             name: 'Pure Cotton Casual Slim-Fit Shirt', 
             price: 599.00, 
             image: 'assets/images/mensShirt.jpg', 
@@ -25,7 +25,7 @@
             rating: 5 
         },
         { 
-            id: 'm2', 
+            id: '102', 
             name: 'Comfort Fit Classic Denim Jeans', 
             price: 699.00, 
             image: 'assets/images/mensJeans.avif', 
@@ -35,7 +35,7 @@
             rating: 4 
         },
         { 
-            id: 'm3', 
+            id: '103', 
             name: 'Modern Denim Outerwear Jacket', 
             price: 899.00, 
             image: 'assets/images/MensJacket.webp', 

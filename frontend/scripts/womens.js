@@ -15,7 +15,7 @@
     // 2. HARDCODED FALLBACK DATA (Backend offline hone par yeh show hoga)
     const fallbackProducts = [
         { 
-            id: 'm1', 
+            id: '201', 
             name: 'Pure Traditional Vibe', 
             price: 899.00, 
             image: 'assets/images/WomenTraditional.jpeg', 
@@ -25,7 +25,7 @@
             rating: 5 
         },
         { 
-            id: 'm2', 
+            id: '202', 
             name: 'Comfort Fit Classic Denim Jeans', 
             price: 680.00, 
             image: 'assets/images/womensJeans.webp', 
@@ -35,7 +35,7 @@
             rating: 4 
         },
         { 
-            id: 'm3', 
+            id: '203', 
             name: 'Compfy Tops', 
             price: 350.00, 
             image: 'assets/images/womensTop.jpg', 

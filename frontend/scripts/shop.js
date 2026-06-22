@@ -112,9 +112,10 @@ async function fetchProducts(
         currentProducts = Array.isArray(data.products) ? data.products : [];
 
         if (!currentProducts || currentProducts.length === 0) {
-                    totalPages = 1;
-                }
-            }
+            totalPages = 1;
+        } else {
+            totalPages = data.totalPages || 1;
+        }
 
         // sorting
         applySorting();
@@ -127,18 +128,7 @@ async function fetchProducts(
             "SHOP FETCH ERROR:",
             error
         );
-        const normCat = normalizeCategoryString(currentCategory);
-        const fallback = normCat === 'all'
-            ? fallbackProducts
-            : fallbackProducts.filter(p => categoriesMatch(p.category, currentCategory));
-        if (fallback.length > 0) {
-            currentProducts = fallback;
-            totalPages = 1;
-            applySorting();
-            renderPagination();
-        } else {
-            renderEmptyState("No products found.");
-        }
+        renderEmptyState("No products found.");
     }
 }
 

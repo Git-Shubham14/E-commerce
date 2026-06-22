@@ -140,6 +140,10 @@ const removeStorage = (
 
 // auth helpers
 
+const getToken = () => {
+    return localStorage.getItem(CONFIG.STORAGE_KEYS.TOKEN);
+};
+
 const getUser = () => {
 
     return getJSON(
@@ -677,6 +681,7 @@ window.AppUtils = {
     removeStorage,
 
     getUser,
+    getToken,
     clearAuthData,
     requireAuth,
     refreshAccessToken,

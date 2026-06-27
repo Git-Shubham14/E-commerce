@@ -499,9 +499,7 @@ body.dark-theme .stars i.fas {
 /* ========================================================
    ISOLATED METRIC LOGO COLORS (Independent From Stars)
 ======================================================== */
-/* ========================================================
-   ISOLATED METRIC LOGO COLORS (Locked Black for Both Themes)
-======================================================== */
+
 .metric-controls > i.fal,
 .metric-controls > i[class*="fa-"],
 body.dark-theme .metric-controls > i.fal,
@@ -522,6 +520,67 @@ body.dark-theme div[class*="feedback"] {
                 0 0 60px rgba(255, 255, 255, 0.25) !important;
 }
 
+
+#contact-details .details {
+    width: 40%;
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
+    border: 1px solid #f0f0f0;
+    box-sizing: border-box;
+}
+
+#contact-details .details span,
+#form-details form span {
+    font-size: 12px;
+}
+
+#contact-details .details h2,
+#form-details form h2 {
+    font-size: 26px;
+    line-height: 35px;
+    padding: 20px 0;
+}
+
+#contact-details .details h3 {
+    font-size: 16px;
+    padding-bottom: 15px;
+}
+
+#contact-details .details li {
+    list-style: none;
+    display: flex;
+    padding: 10px 0;
+}
+
+#contact-details .details li i {
+    font-size: 14px;
+    padding-right: 22px;
+}
+
+#contact-details .details li p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* ── Update DARK MODE for the Contact Card ── */
+body.dark-theme #contact-details .details {
+    background: #1e1e1e;
+    border: 1px solid #333333;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* Ensure text and icons inside the card are perfectly visible in Dark Mode */
+body.dark-theme #contact-details .details h2,
+body.dark-theme #contact-details .details h3,
+body.dark-theme #contact-details .details span {
+    color: #f0f0f0 !important;
+}
+
+body.dark-theme #contact-details .details li p,
+body.dark-theme #contact-details .details li i {
+    color: #c0c0c0 !important;
 /* ── DARK MODE MISSING FIXES ── */
 body.dark-theme #contact-details {
     background: #121212 !important;

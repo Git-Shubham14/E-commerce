@@ -9,7 +9,7 @@ const rateLimit = require("express-rate-limit");
 
 
 const routes = require("./routes/index")
-
+const authLimiter = require("./middleware/authLimiter");
 // load environment
 dotenv.config();
 const {validateEnv} = require('./config/envValidator');
@@ -118,23 +118,6 @@ if (process.env.NODE_ENV !== "production") {
     next();
   });
 }
-
-// auth limiter
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-
-  max: 20,
-
-  standardHeaders: true,
-
-  legacyHeaders: false,
-
-  message: {
-    success: false,
-
-    message: "Too many requests. Please try again later.",
-  },
-});
 
 // api limiter
 const apiLimiter = rateLimit({

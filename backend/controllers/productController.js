@@ -243,6 +243,8 @@ const createProduct = async (req, res) => {
         });
     }
 
+    const normalizedName = sanitizeString(name).trim();
+
     if (
         safeNumber(price) <= 0
     ) {
@@ -259,10 +261,28 @@ const createProduct = async (req, res) => {
     `;
 
     try {
+    // Prevent duplicate product names (case-insensitive)
+        const [existingProducts] = await db.query(
+            `
+        SELECT id
+        FROM products
+        WHERE LOWER(TRIM(name)) = LOWER(TRIM(?))
+        LIMIT 1
+    `,
+            [normalizedName]
+        );
+
+        if (safeArray(existingProducts).length) {
+            return res.status(409).json({
+                success: false,
+                message: "A product with this name already exists."
+            });
+        }
+        
         const [result] = await db.query(
             query,
             [
-                sanitizeString(name),
+                normalizedName,
                 description || "",
                 safeNumber(price),
                 sanitizeString(image),
@@ -272,8 +292,8 @@ const createProduct = async (req, res) => {
                     safeInteger(stock)
                 ),
                 featured === true
-                || featured === 1
-                || featured === "1"
+                    || featured === 1
+                    || featured === "1"
                     ? 1
                     : 0
             ]
@@ -364,8 +384,8 @@ const updateProduct = async (req, res) => {
                     safeInteger(stock)
                 ),
                 featured === true
-                || featured === 1
-                || featured === "1"
+                    || featured === 1
+                    || featured === "1"
                     ? 1
                     : 0,
                 id

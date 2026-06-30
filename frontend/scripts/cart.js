@@ -109,21 +109,34 @@ function updateCartTotals() {
     }
 }
 
-function renderEmptyCart() {
-    if (!elements.cartContainer) return;
+// ========================================
+// UPDATE BUTTON STATES (Issue #348)
+// ========================================
+function updateButtonStates() {
+    document.querySelectorAll('.cart-item').forEach((itemEl) => {
+        const qtySpan = itemEl.querySelector('.cart-qty-controls span');
+        const decreaseBtn = itemEl.querySelector('.decrease-qty');
+        if (!qtySpan || !decreaseBtn) return;
+        const qty = parseInt(qtySpan.textContent, 10);
+        decreaseBtn.disabled = (qty <= 1);
+        if (qty <= 1) {
+            decreaseBtn.style.opacity = '0.5';
+            decreaseBtn.style.cursor = 'not-allowed';
+            decreaseBtn.title = 'Minimum quantity is 1';
+        } else {
+            decreaseBtn.style.opacity = '1';
+            decreaseBtn.style.cursor = 'pointer';
+            decreaseBtn.title = '';
+        }
+    });
+}
 
-    elements.cartContainer.innerHTML =
-        `
-            <div class="empty-cart">
-                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                <h2>Your cart is empty</h2>
-                <p>Add products to continue shopping.</p>
-                <a href="shop.html" class="continue-shopping-btn">Continue Shopping</a>
-            </div>
-        `;
-
-    if (elements.checkoutBtn) {
-        elements.checkoutBtn.disabled = true;
+// RENDER CART
+function renderCart() {
+    if (
+        !elements.cartContainer
+    ) {
+        return;
     }
 
     if (elements.emptyCartBtn) {
@@ -249,7 +262,12 @@ function renderCart() {
         fragment
     );
 
-    updateCartTotals();
+    // Update button states after rendering
+    updateButtonStates();
+
+    updateCartTotals(
+        subtotal
+    );
 }
 
 document.addEventListener(
@@ -289,22 +307,58 @@ document.addEventListener(
             return;
         }
 
-        if (decreaseBtn) {
+        // ========================================
+        // decrease qty (Issue #348 - min 1 fix)
+        // ========================================
+        const decreaseBtn =
+            event.target.closest(
+                ".decrease-qty"
+            );
+
+        if (
+            decreaseBtn
+        ) {
+
             const index =
                 Number(
                     decreaseBtn.dataset.index
                 );
 
-            if (!cart[index]) return;
+            if (
+                !cart[index]
+            ) {
+                return;
+            }
 
-            cart[index].qty =
-                Math.max(
-                    1,
-                    AppUtils.safeInteger(
-                        cart[index].qty,
-                        1
-                    ) - 1
+            const currentQty =
+                safeQty(
+                    cart[index].qty
                 );
+
+            // ✅ CHECK: if quantity is 1 or less, show toast and return
+            if (
+                currentQty <= 1
+            ) {
+
+                AppUtils.notify(
+                    "Minimum quantity is 1",
+                    "warning"
+                );
+
+                // Disable the button visually
+                decreaseBtn.disabled = true;
+                decreaseBtn.style.opacity = '0.5';
+                decreaseBtn.style.cursor = 'not-allowed';
+
+                return;
+            }
+
+            // Decrease quantity
+            cart[index].qty = currentQty - 1;
+
+            saveCart();
+
+            renderCart();
 
             saveAndRender(cart);
             return;

@@ -635,13 +635,65 @@ body.dark-theme .desktop-nav #navbar-links li a::after,
 body.dark-theme .desktop-nav #navbar-links li a::before {
     display: none ;
 }
-#theme-toggle {
+/* #theme-toggle {
     background: none ;
     border: none ;
     cursor: pointer ;
     font-size: 20px ;
     padding: 5px ;
     box-shadow: none ;
+} */
+
+/* ===== Premium Theme Toggle Button ===== */
+.theme-toggle-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0, 0, 0, 0.12);
+    background: #7B879D !important;
+    backdrop-filter: blur(8px);
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    flex-shrink: 0;
+    padding: 0;
+}
+
+.theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #088178;
+    transform: scale(1.1);
+    box-shadow: 0 4px 14px rgba(8, 129, 120, 0.2);
+}
+
+.theme-toggle-btn:active {
+    transform: scale(0.92);
+}
+
+.theme-icon {
+    display: inline-block;
+    line-height: 1;
+    transition: transform 0.4s ease;
+}
+
+.theme-toggle-btn:hover .theme-icon {
+    transform: rotate(20deg);
+}
+
+/* Dark mode */
+body.dark-theme .theme-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-theme .theme-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 14px rgba(255, 255, 255, 0.1);
 }
 
 body.dark-theme footer .logo {
@@ -992,4 +1044,31 @@ body.dark-theme .cart-drawer-subtotal {
     .cart-drawer-panel {
         width: 100%;
     }
+}
+/* ========================================================
+   🛡️ ULTIMATE FIX: हटाएं लाल बैज, लगाएं ग्रीन बैज
+======================================================== */
+#cart-badge {
+    background: #088178 !important;
+    /* हरा/टील रंग */
+    color: #ffffff !important;
+    border-radius: 50% !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 2px 6px !important;
+    font-size: 12px !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    top: -6px !important;
+    right: -8px !important;
+    position: absolute !important;
+}
+
+/* जरूरी: सुनिश्चित करें कि बैज के ऊपर कोई अन्य लाल रंग न आए */
+#cart-badge::before,
+#cart-badge::after {
+    display: none !important;
+    content: none !important;
 }

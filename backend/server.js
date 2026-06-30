@@ -1,5 +1,5 @@
 const express = require("express");
-
+const helmetMiddleware = require("./middleware/helmetMiddleware");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
@@ -7,33 +7,13 @@ const dotenv = require("dotenv");
 
 const rateLimit = require("express-rate-limit");
 
-const helmet = require("helmet");
 
 const routes = require("./routes/index")
-
+const authLimiter = require("./middleware/authLimiter");
 // load environment
 dotenv.config();
-
-// validate critical env
-const requiredEnv = [
-  "JWT_SECRET",
-
-  "DB_HOST",
-
-  "DB_USER",
-
-  "DB_PASSWORD",
-
-  "DB_NAME",
-];
-
-requiredEnv.forEach((key) => {
-  if (!process.env[key]) {
-    console.error(`Missing environment variable: ${key}`);
-
-    process.exit(1);
-  }
-});
+const {validateEnv} = require('./config/envValidator');
+validateEnv();
 
 // database
 require("./config/db");
@@ -43,8 +23,6 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const { initSocket } = require("./utils/socketManager");
-initSocket(server);
-
 // constants
 const PORT = Number(process.env.PORT) || 5000;
 
@@ -57,49 +35,7 @@ app.set("trust proxy", 1);
 app.disable("x-powered-by");
 
 // security headers
-app.use(
-  helmet({
-    crossOriginEmbedderPolicy: false,
-
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-
-        scriptSrc: [
-          "'self'",
-
-          "'unsafe-inline'",
-
-          "https://www.gstatic.com",
-
-          "https://apis.google.com",
-        ],
-
-        styleSrc: [
-          "'self'",
-
-          "'unsafe-inline'",
-
-          "https://fonts.googleapis.com",
-
-          "https://cdnjs.cloudflare.com",
-        ],
-
-        fontSrc: [
-          "'self'",
-
-          "https://fonts.gstatic.com",
-
-          "https://cdnjs.cloudflare.com",
-        ],
-
-        imgSrc: ["'self'", "data:", "https:"],
-
-        connectSrc: ["'self'", FRONTEND_URL],
-      },
-    },
-  }),
-);
+app.use(helmetMiddleware);
 
 // allowed origins
 const allowedOrigins = [
@@ -125,6 +61,9 @@ const allowedOrigins = [
 
     "https://www.bhuvansh.xyz"
 ];
+
+// initialize websocket server with CORS
+initSocket(server, allowedOrigins);
 
 // cors
 app.use(
@@ -179,23 +118,6 @@ if (process.env.NODE_ENV !== "production") {
     next();
   });
 }
-
-// auth limiter
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-
-  max: 20,
-
-  standardHeaders: true,
-
-  legacyHeaders: false,
-
-  message: {
-    success: false,
-
-    message: "Too many requests. Please try again later.",
-  },
-});
 
 // api limiter
 const apiLimiter = rateLimit({

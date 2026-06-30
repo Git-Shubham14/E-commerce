@@ -78,16 +78,16 @@ function renderWishlist() {
             card.innerHTML =
                 `
                     <img
-                        src="${AppUtils.defaultImage(product?.image || product?.img)}"
-                        alt="${product?.name || "Product"}"
+                        src="${AppUtils.escapeHTML(AppUtils.defaultImage(product?.image || product?.img))}"
+                        alt="${AppUtils.escapeHTML(product?.name || "Product")}"
                         loading="lazy"
                     >
                     <div class="wishlist-content">
                         <span>
-                            ${product?.brand || "Brand"}
+                            ${AppUtils.escapeHTML(product?.brand || "Brand")}
                         </span>
                         <h4>
-                            ${product?.name || "Product"}
+                            ${AppUtils.escapeHTML(product?.name || "Product")}
                         </h4>
                         <p class="wishlist-price">
                             ${AppUtils.formatPrice(product?.price || 0)}

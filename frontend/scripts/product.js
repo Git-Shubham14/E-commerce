@@ -245,6 +245,29 @@ function cacheProduct(
     );
 }
 
+// ========================================
+// Breadcrumb Navigation (Issue #344)
+// ========================================
+function updateBreadcrumb(product) {
+    const categoryEl = document.getElementById('breadcrumb-category');
+    const categoryLink = document.getElementById('breadcrumb-category-link');
+    const productNameEl = document.getElementById('breadcrumb-product-name');
+
+    if (!product || !productNameEl) return;
+
+    // Update product name
+    productNameEl.textContent = product.name || 'Product';
+
+    // Update category if available
+    if (product.category) {
+        categoryEl.style.display = 'inline-block';
+        categoryLink.textContent = product.category.charAt(0).toUpperCase() + product.category.slice(1);
+        categoryLink.href = `shop.html?category=${encodeURIComponent(product.category)}`;
+    } else {
+        categoryEl.style.display = 'none';
+    }
+}
+
 // fetch product
 async function fetchProduct() {
 
@@ -323,6 +346,9 @@ function initializeProductPage() {
 
         return;
     }
+
+    // Update breadcrumb
+    updateBreadcrumb(product);
 
     // out of stock
     if (

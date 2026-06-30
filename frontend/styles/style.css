@@ -170,3 +170,63 @@ Password Strength Meter (Issue #166)
     margin-top: 4px;
     min-height: 20px;
 }
+
+/* =============================
+Breadcrumb Navigation (Issue #344)
+============================= */
+.breadcrumb-nav {
+    padding: 12px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    background: transparent;
+}
+
+.breadcrumb-list {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex-wrap: wrap;
+    gap: 4px 0;
+}
+
+.breadcrumb-item {
+    display: inline-flex;
+    align-items: center;
+    font-size: 14px;
+    color: #666;
+}
+
+.breadcrumb-item a {
+    color: #666;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.breadcrumb-item a:hover {
+    color: #007bff;
+    text-decoration: underline;
+}
+
+.breadcrumb-item.active {
+    color: #333;
+    font-weight: 600;
+}
+
+.breadcrumb-separator {
+    color: #999;
+    margin: 0 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .breadcrumb-nav {
+        padding: 8px 12px;
+    }
+    .breadcrumb-item {
+        font-size: 12px;
+    }
+    .breadcrumb-separator {
+        margin: 0 4px;
+    }
+}

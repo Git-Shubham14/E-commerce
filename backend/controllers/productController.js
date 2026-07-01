@@ -417,8 +417,8 @@ const updateProduct = async (req, res) => {
     }
 };
 
-// Deletee product
-const DeleteeProduct = async (req, res) => {
+// Delete product
+const deleteProduct = async (req, res) => {
     const id =
         safeInteger(
             req.params.id
@@ -482,6 +482,6 @@ module.exports = {
     getSingleProduct,
     createProduct,
     updateProduct,
-    DeleteeProduct,
+    deleteProduct,
     getProductSuggestions
 };

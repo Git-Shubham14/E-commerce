@@ -384,15 +384,23 @@
             let currentLockedRating = 0; 
 
             // Common helper function to apply the beautiful golden neon light emission
+            function isDarkTheme() {
+                return document.body.classList.contains('dark-theme');
+            }
+
             function applyGlow(element) {
-                element.style.color = '#ffcc00';
-                // Layered shadows: tight crisp core glow + wide diffused ambient bloom
-                element.style.textShadow = '0 0 4px #ffcc00, 0 0 10px #ffbb00, 0 0 20px #ffaa00';
+                if (isDarkTheme()) {
+                    element.style.color = '#ffd700';
+                    element.style.textShadow = '0 0 6px rgba(255, 215, 0, 0.8), 0 0 12px rgba(255, 165, 0, 0.5)';
+                } else {
+                    element.style.color = '#f5a623';
+                    element.style.textShadow = '0 0 4px rgba(245, 166, 35, 0.4)';
+                }
                 element.style.transform = 'scale(1.1)';
             }
 
             function removeGlow(element) {
-                element.style.color = '#e2e8f0';
+                element.style.color = isDarkTheme() ? '#666666' : '#cccccc';
                 element.style.textShadow = 'none';
                 element.style.transform = 'scale(1)';
             }
@@ -457,6 +465,27 @@
 
     forceInitStars();
     window.onload = forceInitStars;
+    // Re-apply star colors when theme toggles
+const themeToggleBtn = document.getElementById('theme-toggle');
+if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', function() {
+        setTimeout(() => {
+            document.querySelectorAll('.stars').forEach(row => {
+                row.querySelectorAll('i').forEach(s => {
+                    if (s.className.includes('fas')) {
+                        s.style.color = document.body.classList.contains('dark-theme') ? '#ffd700' : '#f5a623';
+                        s.style.textShadow = document.body.classList.contains('dark-theme')
+                            ? '0 0 6px rgba(255, 215, 0, 0.8), 0 0 12px rgba(255, 165, 0, 0.5)'
+                            : '0 0 4px rgba(245, 166, 35, 0.4)';
+                    } else {
+                        s.style.color = document.body.classList.contains('dark-theme') ? '#666666' : '#cccccc';
+                        s.style.textShadow = 'none';
+                    }
+                });
+            });
+        }, 50);
+    });
+}
 </script>
 </body>
 </html>

@@ -465,35 +465,26 @@ body.dark-theme .ratings-right h2 {
 ======================================================== */
 
 /* Empty / Standard state for stars only */
+/* Empty stars — light theme */
 .stars i {
-    color: #cccccc !important; 
-    transition: color 0.3s ease;
+    color: #cccccc;
+    transition: color 0.2s ease, text-shadow 0.2s ease, transform 0.2s ease;
 }
 
-/* FILLED State for Light Theme - Changes to solid black */
-.stars i.active,
-.stars i.filled,
-.stars i.selected,
-.stars i.fas { 
-    color: #000000 !important; 
+/* Filled stars — light theme: golden orange */
+.stars i.fas {
+    color: #f5a623;
 }
 
-/* ========================================================
-   DARK THEME STYLES (Triggers when .dark-theme is on body)
-======================================================== */
-
-/* Empty state for stars inside dark mode frame */
+/* Empty stars — dark theme */
 body.dark-theme .stars i {
-    color: #555555 !important; 
+    color: #555555;
 }
 
-/* FILLED State for Dark Theme - Changes to bright white */
-body.dark-theme .stars i.active,
-body.dark-theme .stars i.filled,
-body.dark-theme .stars i.selected,
+/* Filled stars — dark theme: bright gold */
 body.dark-theme .stars i.fas {
-    color: #ffffff !important; 
-    text-shadow: 0 0 8px rgba(255, 255, 255, 0.5); 
+    color: #ffd700;
+    text-shadow: 0 0 6px rgba(255, 215, 0, 0.8), 0 0 12px rgba(255, 165, 0, 0.5);
 }
 
 /* ========================================================

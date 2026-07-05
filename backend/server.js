@@ -18,6 +18,12 @@ const authLimiter = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 
 // Add with other route imports
+const aiFinancialRoutes = require('./routes/aiFinancialRoutes');
+
+// Add AI financial routes
+app.use('/api/ai/financial', aiFinancialRoutes);
+
+// Add with other route imports
 const copywriterRoutes = require('./routes/copywriterRoutes');
 
 // Add copywriter routes

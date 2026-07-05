@@ -7,7 +7,11 @@ const recentlyViewed =
 // ELEMENTS
 const elements = {
     recentContainer:
+<<<<<<< HEAD
         AppUtils.$("#recently-viewed-count")
+=======
+       AppUtils.$("#recently-viewed-count"),
+>>>>>>> 709f3c7 (fix: improve wishlist toast and frontend scripts)
 
     recentCount:
         AppUtils.$("#recently-viewed-count")

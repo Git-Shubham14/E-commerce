@@ -1,4 +1,3 @@
-// backend/routes/authRoutes.js
 const express = require("express");
 const router = express.Router();
 
@@ -15,20 +14,28 @@ const {
 
 // ======================== MIDDLEWARE ========================
 const authMiddleware = require("../middleware/authMiddleware");
-const { 
-    signupLimiter, 
-    loginLimiter, 
-    forgotPasswordLimiter, 
-    refreshTokenLimiter 
+const {
+    signupLimiter,
+    loginLimiter,
+    forgotPasswordLimiter,
+    refreshTokenLimiter
 } = require("../middleware/rateLimiter");
 const { verifyHumanChallenge } = require("../middleware/behavioralCaptcha");
 const { detectSyntheticIdentity } = require("../middleware/fraudDetectionMiddleware");
 
+// ✅ New Validation Middleware Import Added
+const {
+    validateSignup,
+    validateVerifySignup,
+    validateLogin,
+    validateForgotPassword,
+    validateResetPassword,
+    validateRefreshToken,
+    validateChangePassword
+} = require("../middleware/authValidation");
+
 // ======================== DATABASE ========================
 const db = require("../config/db").promise;
-
-// ======================== UTILITIES ========================
-const { sanitizeString } = require("../utils/helpers");
 
 // ======================== ENVIRONMENT VALIDATION ========================
 if (!process.env.JWT_SECRET) {
@@ -37,36 +44,24 @@ if (!process.env.JWT_SECRET) {
 
 // ======================== HELPER FUNCTIONS ========================
 
-/**
- * Validate required fields in request body
- */
-function validateRequiredFields(req, res, fields) {
-    const missing = fields.filter(field => !sanitizeString(req.body[field]));
-    
-    if (missing.length > 0) {
-        return res.status(400).json({
-            success: false,
-            message: `${missing.join(', ')} is/are required`
-        });
-    }
-    return null;
-}
+// ❌ `validateRequiredFields` helper removed completely
+// ❌ `sanitizeString` import removed because it's now handled in the middleware
 
 /**
- * Apply behavioral CAPTCHA check
+ * Apply behavioral CAPTCHA check (Kept exactly as it was, untouched)
  */
 function applyCaptchaCheck(req, res, next) {
     if (process.env.ENABLE_BEHAVIORAL_CAPTCHA === 'true') {
         const captchaResult = verifyHumanChallenge(req);
-        
+
         if (!captchaResult.passed) {
             console.warn(`🛡️ CAPTCHA failed for ${req.ip} on ${req.path}: ${captchaResult.reason}`);
-            
+
             const statusCode = captchaResult.reason === 'rate_limit_exceeded' ? 429 : 403;
             return res.status(statusCode).json({
                 success: false,
-                message: captchaResult.reason === 'rate_limit_exceeded' 
-                    ? 'Too many requests. Please slow down.' 
+                message: captchaResult.reason === 'rate_limit_exceeded'
+                    ? 'Too many requests. Please slow down.'
                     : 'Automated access detected. Please verify you are human.',
                 retryAfter: captchaResult.retryAfter || 60,
                 score: captchaResult.score
@@ -98,54 +93,14 @@ router.get("/status", (req, res) => {
 
 /**
  * POST /api/auth/signup
- * Register new user with synthetic identity fraud detection
+ * Register new user
  */
 router.post(
     "/signup",
     signupLimiter,
     applyCaptchaCheck,
-    detectSyntheticIdentity,  // ✅ FRAUD DETECTION ADDED
-    (req, res, next) => {
-        const { name, email, password, age } = req.body;
-
-        // Validate all required fields
-        const validationError = validateRequiredFields(req, res, ['name', 'email', 'password']);
-        if (validationError) return validationError;
-
-        // Additional validations
-        if (name.length < 2) {
-            return res.status(400).json({
-                success: false,
-                message: "Name must be at least 2 characters long"
-            });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: "Password must be at least 6 characters long"
-            });
-        }
-
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid email format"
-            });
-        }
-
-        // Age validation (if provided)
-        if (age && (age < 18 || age > 100)) {
-            return res.status(400).json({
-                success: false,
-                message: "Age must be between 18 and 100"
-            });
-        }
-
-        next();
-    },
+    detectSyntheticIdentity,
+    validateSignup,   
     signup
 );
 
@@ -157,22 +112,7 @@ router.post(
     "/verify-signup",
     signupLimiter,
     applyCaptchaCheck,
-    (req, res, next) => {
-        const { email, otp } = req.body;
-        
-        const validationError = validateRequiredFields(req, res, ['email', 'otp']);
-        if (validationError) return validationError;
-
-        // OTP should be 6 digits
-        if (!/^\d{6}$/.test(otp)) {
-            return res.status(400).json({
-                success: false,
-                message: "OTP must be 6 digits"
-            });
-        }
-
-        next();
-    },
+    validateVerifySignup, 
     verifySignup
 );
 
@@ -184,23 +124,7 @@ router.post(
     "/login",
     loginLimiter,
     applyCaptchaCheck,
-    (req, res, next) => {
-        const { email, password } = req.body;
-
-        const validationError = validateRequiredFields(req, res, ['email', 'password']);
-        if (validationError) return validationError;
-
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid email format"
-            });
-        }
-
-        next();
-    },
+    validateLogin,  
     login
 );
 
@@ -212,23 +136,7 @@ router.post(
     "/forgot-password",
     forgotPasswordLimiter,
     applyCaptchaCheck,
-    (req, res, next) => {
-        const { email } = req.body;
-        
-        const validationError = validateRequiredFields(req, res, ['email']);
-        if (validationError) return validationError;
-
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid email format"
-            });
-        }
-
-        next();
-    },
+    validateForgotPassword, 
     forgotPassword
 );
 
@@ -240,38 +148,7 @@ router.post(
     "/reset-password",
     forgotPasswordLimiter,
     applyCaptchaCheck,
-    (req, res, next) => {
-        const { userId, otp, newPassword } = req.body;
-
-        const validationError = validateRequiredFields(req, res, ['userId', 'otp', 'newPassword']);
-        if (validationError) return validationError;
-
-        // UserId should be a number
-        if (isNaN(Number(userId))) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid user ID format"
-            });
-        }
-
-        // OTP should be 6 digits
-        if (!/^\d{6}$/.test(otp)) {
-            return res.status(400).json({
-                success: false,
-                message: "OTP must be 6 digits"
-            });
-        }
-
-        // Password should be strong enough
-        if (newPassword.length < 6) {
-            return res.status(400).json({
-                success: false,
-                message: "Password must be at least 6 characters long"
-            });
-        }
-
-        next();
-    },
+    validateResetPassword,
     resetPassword
 );
 
@@ -283,22 +160,7 @@ router.post(
     "/refresh-token",
     refreshTokenLimiter,
     applyCaptchaCheck,
-    (req, res, next) => {
-        const { refreshToken } = req.body;
-
-        const validationError = validateRequiredFields(req, res, ['refreshToken']);
-        if (validationError) return validationError;
-
-        // Refresh token should be a valid JWT format
-        if (typeof refreshToken !== 'string' || refreshToken.split('.').length !== 3) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid refresh token format"
-            });
-        }
-
-        next();
-    },
+    validateRefreshToken, 
     refreshAccessToken
 );
 
@@ -380,23 +242,12 @@ router.post(
     "/change-password",
     authMiddleware,
     applyCaptchaCheck,
+    validateChangePassword,
     async (req, res) => {
         try {
             const { currentPassword, newPassword } = req.body;
 
-            if (!sanitizeString(currentPassword) || !sanitizeString(newPassword)) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Current password and new password are required"
-                });
-            }
-
-            if (newPassword.length < 6) {
-                return res.status(400).json({
-                    success: false,
-                    message: "New password must be at least 6 characters long"
-                });
-            }
+            // ❌ Inline validations removed (handled in middleware)
 
             // Get user with password
             const [users] = await db.query(
@@ -416,7 +267,7 @@ router.post(
             // Verify current password
             const bcrypt = require('bcryptjs');
             const isValidPassword = await bcrypt.compare(currentPassword, users[0].password);
-            
+
             if (!isValidPassword) {
                 return res.status(401).json({
                     success: false,
@@ -519,8 +370,8 @@ router.get(
                 });
             }
 
-            const isFlagged = detection[0].risk_level === 'critical' || 
-                             detection[0].risk_level === 'high';
+            const isFlagged = detection[0].risk_level === 'critical' ||
+                detection[0].risk_level === 'high';
 
             return res.status(200).json({
                 success: true,

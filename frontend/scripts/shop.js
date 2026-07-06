@@ -1073,7 +1073,7 @@ function renderPagination() {
     prevBtn.innerText =
         "← Prev";
 
-    prevBtn.className = 
+    prevBtn.className =
         "pagination-btn";
 
     prevBtn.disabled =

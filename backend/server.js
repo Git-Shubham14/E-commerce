@@ -9,10 +9,10 @@ const morgan = require("morgan");
 const timeout = require("connect-timeout");
 const fs = require("fs");
 const path = require("path");
-const { logServerStartup } = require('./src/utils/serverStartupLogger');
+const { logServerStartup } = require('./utils/serverStartupLogger');
 
-const { accessLogStream, errorLogStream } = require('./src/utils/logStreams');
-const { buildHealthResponse } = require('./src/utils/healthResponseBuilder');
+const { accessLogStream, errorLogStream } = require('./utils/logstreams');
+const { buildHealthResponse } = require('./utils/healthResponseBuilder');
 
 const dotenv = require("dotenv");
 const rateLimit = require("express-rate-limit");
@@ -21,9 +21,9 @@ const corsMiddleware = require("./middleware/corsMiddleware");
 // Add with other route imports
 const aiFeedRoutes = require('./routes/aiFeedRoutes');
 // Import agent routes
-const agentRoutes = require('./src/routes/agentRoutes');
+const agentRoutes = require('./routes/agentRoutes');
 // Import legal routes
-const legalRoutes = require('./src/routes/legalRoutes');
+const legalRoutes = require('./routes/legalRoutes');
 // Add with other route imports
 const aiLegalRoutes = require('./routes/aiLegalRoutes');
 
@@ -43,10 +43,10 @@ const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 const performanceRoutes = require('./routes/performanceRoutes');
 
 // Import routes
-const approvalRoutes = require('./src/routes/approvalRoutes');
-const rollbackRoutes = require('./src/routes/rollbackRoutes');
+const approvalRoutes = require('./routes/approvalRoutes');
+const rollbackRoutes = require('./routes/rollbackRoutes');
 // Import security routes
-const securityRoutes = require('./src/routes/securityRoutes');
+const securityRoutes = require('./routes/securityRoutes');
 
 // Add routes
 app.use('/api/security', securityRoutes);
@@ -108,7 +108,7 @@ const app = express();
 const http = require("http");
 const server = http.createServer(app);
 const { initSocket } = require("./utils/socketManager");
-const { accessLogger, errorLogger, devLogger } = require('./src/config/morganConfig');
+const { accessLogger, errorLogger, devLogger } = require('./config/morganConfig');
 // constants
 const PORT = Number(process.env.PORT) || 5000;
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5500";

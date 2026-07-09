@@ -9,6 +9,8 @@ const morgan = require("morgan");
 const timeout = require("connect-timeout");
 const fs = require("fs");
 const path = require("path");
+const setupGracefulShutdown = require('./src/utils/gracefulShutdown');
+
 const { apiLimiter, adminLimiter, mcpLimiter } = require('./config/rateLimiters');
 const dotenv = require("dotenv");
 const helmet = require("helmet");
@@ -321,18 +323,8 @@ process.on("uncaughtException", (error) => {
     }, 1000);
 });
 
-// graceful shutdown
-function shutdown() {
-    console.log("\nShutting down server gracefully...");
-    server.close(() => {
-        console.log("HTTP server closed");
-        process.exit(0);
-    });
-    setTimeout(() => {
-        console.error("Force shutdown after timeout");
-        process.exit(1);
-    }, 10000);
-}
+// Initialize graceful shutdown logic
+setupGracefulShutdown(server);
 
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);

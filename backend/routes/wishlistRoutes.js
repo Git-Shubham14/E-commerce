@@ -7,6 +7,8 @@ const { authorizeRoles } = require("../middleware/rbacMiddleware");
 const wishlistController = require("../controllers/wishlistController");
 const { safeNumber, safeInteger } = require("../utils/helpers");
 
+const { MAX_WISHLIST_SYNC_LIMIT, SUPPORTED_EXPORT_FORMATS } = require("../config/constants");
+
 // ==================== VALIDATION MIDDLEWARE ====================
 const validateProductId = (req, res, next) => {
   const productId = safeNumber(req.params.productId || req.body.productId);
@@ -45,6 +47,24 @@ const validateBatchProducts = (req, res, next) => {
   next();
 };
 
+const validateExportFormat = (req, res, next) => {
+  const format = req.query.format; 
+
+  if (!format) {
+    req.query.format = 'csv'; // Default to CSV
+    return next();
+  }
+
+  if (!SUPPORTED_EXPORT_FORMATS.includes(format)) {
+    return res.status(400).json({
+      success: false,
+      message: `Unsupported export format: "${format}". Allowed formats are: ${SUPPORTED_EXPORT_FORMATS.join(', ')}.`,
+    });
+  }
+
+  next();
+};
+
 // ==================== PUBLIC ROUTES ====================
 // Get shared wishlist by token (No auth required)
 router.get("/share/:token", wishlistController.getSharedWishlist);
@@ -65,7 +85,7 @@ router.get(
 );
 
 // Export wishlist (CSV/JSON)
-router.get("/export", authMiddleware, wishlistController.exportWishlist);
+router.get("/export", authMiddleware,validateExportFormat , wishlistController.exportWishlist);
 
 // Check if product in wishlist
 router.get(

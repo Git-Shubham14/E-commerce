@@ -176,6 +176,15 @@ router.get(
     orderController.getOrderById
 );
 
+// ========================================
+// GET ORDER STATUS (Issue #778)
+// ========================================
+router.get(
+    "/:id/status",
+    authMiddleware,
+    orderController.getOrderStatus
+);
+
 // get all orders (admin)
 router.get(
     "/",

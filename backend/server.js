@@ -9,8 +9,8 @@ const morgan = require("morgan");
 const timeout = require("connect-timeout");
 const fs = require("fs");
 const path = require("path");
-const setupProcessEventHandlers = require('./src/utils/processEventHandlers');
-const setupGracefulShutdown = require('./src/utils/gracefulShutdown');
+const setupProcessEventHandlers = require('./utils/processEventHandlers');
+const setupGracefulShutdown = require('./utils/gracefulShutdown');
 
 const { apiLimiter, adminLimiter, mcpLimiter } = require('./config/rateLimiters');
 const dotenv = require("dotenv");
@@ -21,6 +21,9 @@ const corsMiddleware = require("./middleware/corsMiddleware");
 const responseExampleRoutes = require('./routes/responseExampleRoutes');
 const { standardizeResponse } = require('./middleware/responseStandardizer');
 
+// init app early so route and middleware registration can safely use it
+const app = express();
+
 // Add response standardization middleware BEFORE routes
 app.use(standardizeResponse);
 
@@ -30,9 +33,6 @@ app.use('/api/response-example', responseExampleRoutes);
 const { buildHealthResponse } = require("./utils/healthResponseBuilder");
 const { logServerStartup } = require("./utils/serverStartupLogger");
 const { errorLogStream } = require("./utils/logstreams");
-
-// init app early so route and middleware registration can safely use it
-const app = express();
 
 const logDir = path.join(process.cwd(), "logs");
 // Add with other route imports
@@ -67,8 +67,14 @@ notificationBroker.registerChannel('in_app', inAppChannel.handler);
 notificationBroker.registerChannel('email', emailChannel.handler);
 notificationBroker.registerChannel('webhook', webhookChannel.handler);
 
-// Initialize notification broker
-await notificationBroker.initialize();
+// Initialize notification broker asynchronously
+notificationBroker.initialize().catch(err => {
+    if (typeof logger !== 'undefined' && logger.error) {
+        logger.error('Failed to initialize notification broker:', err);
+    } else {
+        console.error('Failed to initialize notification broker:', err);
+    }
+});
 
 // Add notification routes
 app.use('/api/notifications', notificationBrokerRoutes);
@@ -88,8 +94,14 @@ const { traceRequest } = require('./middleware/tracingMiddleware');
 const { tracingService } = require('./services/tracingService');
 
 
-// Initialize tracing service
-await tracingService.initialize();
+// Initialize tracing service asynchronously
+tracingService.initialize().catch(err => {
+    if (typeof logger !== 'undefined' && logger.error) {
+        logger.error('Failed to initialize tracing service:', err);
+    } else {
+        console.error('Failed to initialize tracing service:', err);
+    }
+});
 
 // Add tracing middleware BEFORE any routes
 app.use(traceRequest);
@@ -111,8 +123,14 @@ const policyRoutes = require('./routes/policyRoutes');
 const { policyEngine } = require('./services/policyEngineService');
 
 
-// Initialize policy engine
-await policyEngine.initialize();
+// Initialize policy engine asynchronously
+policyEngine.initialize().catch(err => {
+    if (typeof logger !== 'undefined' && logger.error) {
+        logger.error('Failed to initialize policy engine:', err);
+    } else {
+        console.error('Failed to initialize policy engine:', err);
+    }
+});
 
 // Add policy routes
 app.use('/api/policies', policyRoutes);
@@ -123,8 +141,14 @@ const outboxRoutes = require('./routes/outboxRoutes');
 const { outboxService } = require('./services/outboxService');
 
 
-// Initialize outbox service
-await outboxService.initialize();
+// Initialize outbox service asynchronously
+outboxService.initialize().catch(err => {
+    if (typeof logger !== 'undefined' && logger.error) {
+        logger.error('Failed to initialize outbox service:', err);
+    } else {
+        console.error('Failed to initialize outbox service:', err);
+    }
+});
 
 // Add outbox routes
 app.use('/api/outbox', outboxRoutes);
@@ -151,8 +175,14 @@ for (const [type, handler] of Object.entries(jobHandlers)) {
     jobQueue.registerHandler(type, handler);
 }
 
-// Initialize job queue
-await jobQueue.initialize();
+// Initialize job queue asynchronously
+jobQueue.initialize().catch(err => {
+    if (typeof logger !== 'undefined' && logger.error) {
+        logger.error('Failed to initialize job queue:', err);
+    } else {
+        console.error('Failed to initialize job queue:', err);
+    }
+});
 
 // Add job routes
 app.use('/api/jobs', jobRoutes);
@@ -160,8 +190,14 @@ app.use('/api/jobs', jobRoutes);
 const flagRoutes = require('./routes/flagRoutes');
 const { featureFlagService } = require('./services/featureFlagService');
 
-// Initialize feature flag service
-await featureFlagService.initialize();
+// Initialize feature flag service asynchronously
+featureFlagService.initialize().catch(err => {
+    if (typeof logger !== 'undefined' && logger.error) {
+        logger.error('Failed to initialize feature flag service:', err);
+    } else {
+        console.error('Failed to initialize feature flag service:', err);
+    }
+});
 
 // Add flag routes
 app.use('/api/flags', flagRoutes);
@@ -196,8 +232,14 @@ app.use('/api/rules', ruleRoutes);
 const pluginRoutes = require('./routes/pluginRoutes');
 const { pluginSystem } = require('./services/pluginSystemService');
 
-// Initialize plugin system
-await pluginSystem.initialize();
+// Initialize plugin system asynchronously
+pluginSystem.initialize().catch(err => {
+    if (typeof logger !== 'undefined' && logger.error) {
+        logger.error('Failed to initialize plugin system:', err);
+    } else {
+        console.error('Failed to initialize plugin system:', err);
+    }
+});
 
 // Add plugin routes
 app.use('/api/plugins', pluginRoutes);
@@ -249,41 +291,9 @@ if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }
 
-// Create error log stream
-const errorLogStream = fs.createWriteStream(
-    path.join(logsDir, 'error.log'),
-    { flags: 'a' }
-);
 
-// Build health response
-function buildHealthResponse(data) {
-    return {
-        success: true,
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        ...data
-    };
-}
 
-// Server startup logger
-function logServerStartup(options) {
-    console.log(`
-╔══════════════════════════════════════════════════════════════╗
-║                    SERVER STARTUP INFO                       ║
-╠══════════════════════════════════════════════════════════════╣
-║  Status:        ✅ Running                                   ║
-║  Port:          ${String(options.port).padEnd(45)}║
-║  Environment:   ${String(options.environment).padEnd(45)}║
-║  Health Check:  ${String(options.healthUrl).padEnd(45)}║
-╠══════════════════════════════════════════════════════════════╣
-║                    SECURITY FEATURES                         ║
-╠══════════════════════════════════════════════════════════════╣
-║  Rate Limiting:  ${String(options.rateLimiting ? '✅ Enabled' : '❌ Disabled').padEnd(44)}║
-║  Helmet:         ${String(options.helmet ? '✅ Enabled' : '❌ Disabled').padEnd(44)}║
-║  MCP Security:   ${String(options.mcpSecurity ? '✅ Enabled' : '❌ Disabled').padEnd(44)}║
-╚══════════════════════════════════════════════════════════════╝
-    `);
-}
+
 
 // Load environment
 dotenv.config();
@@ -386,7 +396,7 @@ app.use(
 );
 
 // Security headers for MCP endpoints
-app.use('/api/mcp/*', (req, res, next) => {
+app.use('/api/mcp', (req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('X-XSS-Protection', '1; mode=block');
@@ -487,10 +497,8 @@ setupProcessEventHandlers(errorLogStream);
 // Initialize graceful shutdown logic
 setupGracefulShutdown(server);
 
-process.on("SIGINT", shutdown);
-process.on("SIGTERM", shutdown);
-
 // Start server
+console.log("Reached end of server.js. Starting server on port:", PORT);
 server.listen(PORT, "0.0.0.0", () => {
     logServerStartup({
         port: PORT,

@@ -318,11 +318,11 @@ const toySubcategoryLinks = Array.from(
 const toyProductPreview = document.getElementById(
     "toy-product-preview"
 );
-const homeKitchenSubcategoryLinks = Array.from(
-    document.querySelectorAll(".home-kitchen-subcategory-link")
+const stationerySubcategoryLinks = Array.from(
+    document.querySelectorAll(".stationery-subcategory-link")
 );
-const homeKitchenProductPreview = document.getElementById(
-    "home-kitchen-product-preview"
+const stationeryProductPreview = document.getElementById(
+    "stationery-product-preview"
 );
 
 const grocerySubcategoryKeywords = {
@@ -447,74 +447,60 @@ const toySubcategoryKeywords = {
     ]
 };
 
-const homeKitchenSubcategoryKeywords = {
-    Furniture: [
-        "furniture",
-        "chair",
-        "sofa",
-        "table",
+const stationerySubcategoryKeywords = {
+    "Notebooks & Planners": [
+        "notebook",
+        "notebooks",
+        "planner",
+        "planners",
+        "diary",
+        "journal",
+        "journals",
+        "pad",
+        "pads"
+    ],
+    "Pens & Writing": [
+        "pen",
+        "pens",
+        "pencil",
+        "pencils",
+        "writing",
+        "marker",
+        "markers",
+        "ink",
+        "eraser",
+        "erasers",
+        "sharpener",
+        "sharpeners"
+    ],
+    "Office Supplies": [
+        "office",
         "desk",
-        "cabinet",
-        "bookshelf",
-        "bed",
-        "stool"
+        "supplies",
+        "clip",
+        "clips",
+        "stapler",
+        "staplers",
+        "tape",
+        "tapes",
+        "folder",
+        "folders",
+        "paperclip",
+        "scissors"
     ],
-    Cookware: [
-        "cookware",
-        "pan",
-        "pot",
-        "saucepan",
-        "skillet",
-        "lid",
-        "dutch",
-        "oven",
-        "bakeware",
-        "spatula"
-    ],
-    Storage: [
-        "storage",
-        "basket",
-        "box",
-        "container",
-        "organizer",
-        "rack",
-        "shelf",
-        "bin",
-        "holder"
-    ],
-    "Home Decor": [
-        "decor",
-        "vase",
-        "lamp",
-        "frame",
-        "mirror",
-        "candle",
-        "rug",
-        "cushion",
+    "Art Supplies": [
         "art",
-        "clock"
-    ],
-    Bedding: [
-        "bedding",
-        "pillow",
-        "sheet",
-        "comforter",
-        "blanket",
-        "duvet",
-        "mattress",
-        "cover"
-    ],
-    "Kitchen Appliances": [
-        "appliance",
-        "appliances",
-        "toaster",
-        "blender",
-        "mixer",
-        "kettle",
-        "juicer",
-        "cooker",
-        "microwave",
-        "coffee"
+        "paint",
+        "paints",
+        "watercolor",
+        "canvas",
+        "brush",
+        "brushes",
+        "sketchbook",
+        "sketchbooks",
+        "crayon",
+        "crayons",
+        "pastel"
     ]
 };
 
@@ -626,7 +612,7 @@ const matchesToySubcategory = (product, subcategory) => {
     );
 };
 
-const matchesHomeKitchenSubcategory = (product, subcategory) => {
+const matchesStationerySubcategory = (product, subcategory) => {
     const normalizedSubcategory = normalizeMenuValue(subcategory);
     const category = normalizeMenuValue(product?.category);
     const productSubcategory = normalizeMenuValue(
@@ -635,7 +621,7 @@ const matchesHomeKitchenSubcategory = (product, subcategory) => {
     const searchText = normalizeMenuValue(
         getProductSearchText(product)
     );
-    const keywords = homeKitchenSubcategoryKeywords[subcategory] || [];
+    const keywords = stationerySubcategoryKeywords[subcategory] || [];
 
     if (productSubcategory) {
         return productSubcategory === normalizedSubcategory;
@@ -646,10 +632,8 @@ const matchesHomeKitchenSubcategory = (product, subcategory) => {
     }
 
     if (
-        category !== "home and kitchen" &&
-        category !== "home & kitchen" &&
-        !searchText.includes("home") &&
-        !searchText.includes("kitchen")
+        category !== "stationery" &&
+        !searchText.includes("stationery")
     ) {
         return false;
     }
@@ -798,8 +782,8 @@ const setActiveToySubcategory = (activeLink) => {
     });
 };
 
-const renderHomeKitchenProducts = (products, subcategory) => {
-    if (!homeKitchenProductPreview) {
+const renderStationeryProducts = (products, subcategory) => {
+    if (!stationeryProductPreview) {
         return;
     }
 
@@ -808,31 +792,31 @@ const renderHomeKitchenProducts = (products, subcategory) => {
         : [];
 
     if (!safeProducts.length) {
-        homeKitchenProductPreview.innerHTML =
-            `<p class="grocery-menu-empty home-kitchen-menu-empty">No products available for ${escapeMenuHTML(subcategory)} yet.</p>`;
+        stationeryProductPreview.innerHTML =
+            `<p class="grocery-menu-empty stationery-menu-empty">No stationery products available for ${escapeMenuHTML(subcategory)} yet.</p>`;
         return;
     }
 
-    homeKitchenProductPreview.innerHTML = safeProducts
+    stationeryProductPreview.innerHTML = safeProducts
         .slice(0, 4)
         .map((product) => {
-            const name = product?.name || "Product";
+            const name = product?.name || "Stationery";
             const escapedName = AppUtils.escapeHTML(name);
             const image = AppUtils.defaultImage(product?.image);
             const price = AppUtils.formatPrice(product?.price || 0);
-            const href = getProductLink(product, "Home & Kitchen", subcategory);
+            const href = getProductLink(product, "Stationery", subcategory);
             const rating = renderMenuRating(product?.rating);
 
             return `
-                <a class="grocery-menu-product toy-menu-product home-kitchen-menu-product" href="${href}">
+                <a class="grocery-menu-product toy-menu-product stationery-menu-product" href="${href}">
                     <img
                         src="${AppUtils.escapeHTML(image)}"
                         alt="${escapedName}"
                         loading="lazy"
                     />
-                    <span class="grocery-menu-product-info toy-menu-product-info home-kitchen-menu-product-info">
-                        <span class="grocery-menu-product-name toy-menu-product-name home-kitchen-menu-product-name">${escapedName}</span>
-                        <span class="grocery-menu-product-price toy-menu-product-price home-kitchen-menu-product-price">${price}</span>
+                    <span class="grocery-menu-product-info toy-menu-product-info stationery-menu-product-info">
+                        <span class="grocery-menu-product-name toy-menu-product-name stationery-menu-product-name">${escapedName}</span>
+                        <span class="grocery-menu-product-price toy-menu-product-price stationery-menu-product-price">${price}</span>
                         ${rating}
                     </span>
                 </a>
@@ -841,8 +825,8 @@ const renderHomeKitchenProducts = (products, subcategory) => {
         .join("");
 };
 
-const setActiveHomeKitchenSubcategory = (activeLink) => {
-    homeKitchenSubcategoryLinks.forEach((link) => {
+const setActiveStationerySubcategory = (activeLink) => {
+    stationerySubcategoryLinks.forEach((link) => {
         const isActive = link === activeLink;
 
         link.classList.toggle("is-active", isActive);
@@ -979,26 +963,26 @@ const initializeToyMegaMenu = async () => {
     showSubcategoryProducts(defaultLink);
 };
 
-const initializeHomeKitchenMegaMenu = async () => {
-    if (!homeKitchenSubcategoryLinks.length || !homeKitchenProductPreview) {
+const initializeStationeryMegaMenu = async () => {
+    if (!stationerySubcategoryLinks.length || !stationeryProductPreview) {
         return;
     }
 
-    let homeKitchenProducts = [];
+    let stationeryProducts = [];
 
     const showSubcategoryProducts = (link) => {
         const subcategory =
-            link.dataset.homeKitchenSubcategory ||
+            link.dataset.stationerySubcategory ||
             link.textContent.trim();
-        const products = homeKitchenProducts.filter((product) =>
-            matchesHomeKitchenSubcategory(product, subcategory)
+        const products = stationeryProducts.filter((product) =>
+            matchesStationerySubcategory(product, subcategory)
         );
 
-        setActiveHomeKitchenSubcategory(link);
-        renderHomeKitchenProducts(products, subcategory);
+        setActiveStationerySubcategory(link);
+        renderStationeryProducts(products, subcategory);
     };
 
-    homeKitchenSubcategoryLinks.forEach((link) => {
+    stationerySubcategoryLinks.forEach((link) => {
         link.addEventListener("mouseenter", () => {
             showSubcategoryProducts(link);
         });
@@ -1008,12 +992,12 @@ const initializeHomeKitchenMegaMenu = async () => {
         });
     });
 
-    homeKitchenProducts = await fetchMegaMenuProducts();
+    stationeryProducts = await fetchMegaMenuProducts();
 
     const defaultLink =
-        homeKitchenSubcategoryLinks.find((link) =>
-            link.dataset.homeKitchenSubcategory === currentSubcategory
-        ) || homeKitchenSubcategoryLinks[0];
+        stationerySubcategoryLinks.find((link) =>
+            link.dataset.stationerySubcategory === currentSubcategory
+        ) || stationerySubcategoryLinks[0];
 
     showSubcategoryProducts(defaultLink);
 };
@@ -1315,7 +1299,7 @@ mobileCategoryAccordions.forEach((accordion) => {
 });
     await initializeGroceryMegaMenu();
     await initializeToyMegaMenu();
-    await initializeHomeKitchenMegaMenu();
+    await initializeStationeryMegaMenu();
     // notify components ready
     document.dispatchEvent(new CustomEvent("componentsLoaded"));
 }

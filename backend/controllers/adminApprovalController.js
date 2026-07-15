@@ -46,7 +46,7 @@ exports.decideApproval = async (req, res) => {
     const { id } = req.params;
     const { action, notes } = req.body;
 
-   
+  
     if (!id || !/^[1-9]\d*$/.test(id)) {
       return res.status(400).json({
         success: false,
@@ -61,63 +61,55 @@ exports.decideApproval = async (req, res) => {
       });
     }
 
-    
+  
     const MAX_NOTE_LENGTH = 500;
     let sanitizedNotes = null;
 
-    // Notes are optional, only validate if provided
     if (notes !== undefined && notes !== null) {
-      // 1. Must be a string
       if (typeof notes !== 'string') {
         return res.status(400).json({
           success: false,
           error: 'Admin notes must be a string if provided.'
         });
       }
-
-      // 2. Trim whitespace
       const trimmedNotes = notes.trim();
-
-      // 3. Reject empty or whitespace-only strings
       if (trimmedNotes.length === 0) {
         return res.status(400).json({
           success: false,
           error: 'Admin notes cannot be empty or contain only whitespace.'
         });
       }
-
-      // 4. Enforce maximum length
       if (trimmedNotes.length > MAX_NOTE_LENGTH) {
         return res.status(400).json({
           success: false,
           error: `Admin notes cannot exceed ${MAX_NOTE_LENGTH} characters.`
         });
       }
-
       sanitizedNotes = trimmedNotes;
     }
-    
+
     const [existingRequest] = await db.query(
       `SELECT status FROM admin_approval_requests WHERE id = ?`,
       [id]
     );
 
+    // Scenario 1: Request does not exist
     if (existingRequest.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'Approval request not found'
+        error: 'Approval request not found.'
       });
     }
 
+    // Scenario 2: Request exists, but has already been processed
     if (existingRequest[0].status !== 'pending') {
       return res.status(409).json({
         success: false,
-        error: `Request already ${existingRequest[0].status}. Cannot re-process an already decided request.`
+        error: `Request is already ${existingRequest[0].status}. Cannot re-process an already decided request.`
       });
     }
-    // ==========================================
 
-    // Atomic database update with status check
+    // Scenario 3: Request is still 'pending', proceed to update
     const [result] = await db.query(
       `UPDATE admin_approval_requests 
              SET status = ?, admin_id = ?, admin_notes = ?
@@ -132,7 +124,6 @@ exports.decideApproval = async (req, res) => {
       });
     }
 
-    // If approved, proceed with order
     if (action === 'approve') {
       // ... order processing logic
     }

@@ -59,8 +59,11 @@ const routes = require("./routes/index");
 const { authLimiter } = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 // Add with other imports
-const driftRoutes = require('./routes/driftRoutes');
-const { architectureDriftService } = require('./services/architectureDriftService');
+const diRoutes = require('./routes/diRoutes');
+const { container } = require('./core/diContainer');
+const { initializeContainer } = require('./core/serviceRegistration');
+const { createRequestScope } = require('./middleware/diMiddleware');
+
 
 
 
@@ -151,11 +154,15 @@ app.use('/api/performance', performanceRoutes);
 await capabilityMappingService.initialize();
 
 
-// Initialize drift service
-await architectureDriftService.initialize();
 
-// Add drift routes
-app.use('/api/drift', driftRoutes);
+// Initialize DI container
+initializeContainer();
+
+// Add DI middleware
+app.use(createRequestScope);
+
+// Add DI routes
+app.use('/api/di', diRoutes);
 // Add with other route imports
 
 const copywriterRoutes = require('./routes/copywriterRoutes');

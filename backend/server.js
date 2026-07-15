@@ -61,6 +61,10 @@ const { authLimiter } = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 // Add with other imports
 
+const riskRoutes = require('./routes/riskRoutes');
+const { architecturalRiskService } = require('./services/architecturalRiskService');
+
+
 const discoveryRoutes = require('./routes/discoveryRoutes');
 const { capabilityDiscoveryService } = require('./services/capabilityDiscoveryService');
 
@@ -211,6 +215,12 @@ app.use(logCompletionMiddleware);
 app.use('/api/correlation', correlationRoutes);
 
 
+
+// Initialize risk service
+await architecturalRiskService.initialize();
+
+// Add risk routes
+app.use('/api/risk', riskRoutes);
 // Add with other route imports
 // Add with other imports
 const provenanceRoutes = require('./routes/provenanceRoutes');

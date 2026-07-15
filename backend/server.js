@@ -59,8 +59,9 @@ const routes = require("./routes/index");
 const { authLimiter } = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 // Add with other imports
-const memoryRoutes = require('./routes/memoryRoutes');
-const { memoryPressureService } = require('./services/memoryPressureService');
+const capabilityRoutes = require('./routes/capabilityRoutes');
+const { capabilityMappingService } = require('./services/capabilityMappingService');
+
 
 const versionRoutes = require('./routes/versionRoutes');
 const { semanticVersionService } = require('./services/semanticVersionService');
@@ -145,13 +146,11 @@ app.use('/api/ai/financial', aiFinancialRoutes);
 app.use('/api/performance', performanceRoutes);
 
 
+// Initialize capability mapping
+await capabilityMappingService.initialize();
 
-
-// Initialize memory pressure service
-await memoryPressureService.initialize();
-
-// Add memory routes
-app.use('/api/memory', memoryRoutes);
+// Add capability routes
+app.use('/api/capabilities', capabilityRoutes);
 // Add with other route imports
 
 const copywriterRoutes = require('./routes/copywriterRoutes');

@@ -16,7 +16,15 @@ const corsMiddleware = require("./middleware/corsMiddleware");
 const routes = require("./routes/index");
 const authLimiter = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
+// Add with other imports
+const crawlerRoutes = require('./routes/crawlerRoutes');
+const { protectAgainstCrawlers } = require('./services/aiCrawlerProtectionService');
 
+// Add crawler protection middleware AFTER rate limiting but BEFORE routes
+app.use(protectAgainstCrawlers);
+
+// Add crawler routes
+app.use('/api/crawler', crawlerRoutes);
 // Add with other route imports
 
 const copywriterRoutes = require('./routes/copywriterRoutes');

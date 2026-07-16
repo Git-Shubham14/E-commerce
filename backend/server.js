@@ -60,6 +60,8 @@ const routes = require("./routes/index");
 const { authLimiter } = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 // Add with other imports
+
+const liabilityRoutes = require('./routes/liabilityRoutes');
 const maturityRoutes = require('./routes/maturityRoutes');
 const { moduleMaturityService } = require('./services/moduleMaturityService');
 
@@ -176,6 +178,9 @@ outboxService.initialize().catch(err => {
 app.use('/api/outbox', outboxRoutes);
 
 
+
+// Add liability routes
+app.use('/api/liability', liabilityRoutes);
 // Add with other route imports
 const recentlyViewedRoutes = require('./routes/recentlyViewedRoutes');
 

@@ -44,9 +44,19 @@ const legalRoutes = require('./routes/legalRoutes');
 const aiLegalRoutes = require('./routes/aiLegalRoutes');
 const routes = require("./routes/index");
 const { authLimiter } = require("./middleware/authLimiter");
-const mcpRoutes = require("./routes/mcpRoutes");
+const mcpRoutes = require("./routes/mcpRoutes"); 
+// Add with other imports
+
+const crawlerRoutes = require('./routes/crawlerRoutes');
+const { protectAgainstCrawlers } = require('./services/aiCrawlerProtectionService');
+const liabilityRoutes = require('./routes/liabilityRoutes');
+const maturityRoutes = require('./routes/maturityRoutes');
+const { moduleMaturityService } = require('./services/moduleMaturityService');
+
+
 const slaRoutes = require('./routes/slaRoutes');
 const { slaService } = require('./services/businessSLAService');
+
 
 const discoveryRoutes = require('./routes/discoveryRoutes');
 const { capabilityDiscoveryService } = require('./services/capabilityDiscoveryService');
@@ -79,6 +89,20 @@ const { policyEngine } = require('./services/policyEngineService');
 const outboxRoutes = require('./routes/outboxRoutes');
 const { outboxService } = require('./services/outboxService');
 
+
+// Initialize outbox service asynchronously
+outboxService.initialize().catch(err => {
+    console.error('Failed to initialize outbox service:', err);
+});
+
+// Add outbox routes
+app.use('/api/outbox', outboxRoutes);
+
+
+
+// Add liability routes
+app.use('/api/liability', liabilityRoutes);
+// Add with other route imports
 const recentlyViewedRoutes = require('./routes/recentlyViewedRoutes');
 const complexityRoutes = require('./routes/complexityRoutes');
 const { architectureComplexityService } = require('./services/architectureComplexityService');
@@ -90,6 +114,35 @@ const { featureFlagService } = require('./services/featureFlagService');
 const correlationRoutes = require('./routes/correlationRoutes');
 const { correlationIdMiddleware, logCompletionMiddleware } = require('./middleware/correlationIdMiddleware');
 
+// Add correlation ID middleware BEFORE any other middleware
+app.use(correlationIdMiddleware);
+app.use(logCompletionMiddleware);
+
+// Add correlation routes
+app.use('/api/correlation', correlationRoutes);
+
+
+
+// Initialize maturity service
+await moduleMaturityService.initialize();
+
+// Add maturity routes
+app.use('/api/maturity', maturityRoutes);
+
+// Initialize SLA service
+await slaService.initialize();
+
+// Add SLA routes
+app.use('/api/sla', slaRoutes);
+
+
+// Add crawler protection middleware AFTER rate limiting but BEFORE routes
+app.use(protectAgainstCrawlers);
+
+// Add crawler routes
+app.use('/api/crawler', crawlerRoutes);
+// Add with other route imports
+// Add with other imports
 const provenanceRoutes = require('./routes/provenanceRoutes');
 const { provenanceService } = require('./services/provenanceService');
 const { provenanceMiddleware } = require('./middleware/provenanceMiddleware');

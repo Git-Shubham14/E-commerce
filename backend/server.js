@@ -60,6 +60,8 @@ const routes = require("./routes/index");
 const { authLimiter } = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 // Add with other imports
+const agentCheckoutRoutes = require('./routes/agentCheckoutRoutes');
+const { agentCheckoutService } = require('./services/agentCheckoutService');
 
 const jaggedFrontierRoutes = require('./routes/jaggedFrontierRoutes');
 const { jaggedFrontierService } = require('./services/jaggedFrontierService');

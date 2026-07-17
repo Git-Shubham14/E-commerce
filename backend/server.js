@@ -60,14 +60,14 @@ const routes = require("./routes/index");
 const { authLimiter } = require("./middleware/authLimiter");
 const mcpRoutes = require("./routes/mcpRoutes"); // ✅ MCP Routes added
 // Add with other imports
-const hallucinationRoutes = require('./routes/hallucinationRoutes');
-const { hallucinationDetectionService } = require('./services/hallucinationDetectionService');
+const agentCheckoutRoutes = require('./routes/agentCheckoutRoutes');
+const { agentCheckoutService } = require('./services/agentCheckoutService');
 
-// Initialize hallucination detection service
-await hallucinationDetectionService.initialize();
+// Initialize checkout service
+await agentCheckoutService.initialize();
 
-// Add hallucination routes
-app.use('/api/hallucination', hallucinationRoutes);
+// Add checkout routes
+app.use('/api/agent-checkout', agentCheckoutRoutes);
 // Add with other route imports
 // Add with other imports
 const provenanceRoutes = require('./routes/provenanceRoutes');

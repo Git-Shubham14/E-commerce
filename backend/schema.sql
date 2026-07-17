@@ -206,6 +206,8 @@ CREATE TABLE IF NOT EXISTS orders (
     shipping_address JSON NOT NULL,
     payment_method VARCHAR(50),
     payment_status ENUM('pending', 'paid', 'failed', 'refunded', 'partially_refunded') DEFAULT 'pending',
+    payment_intent_id VARCHAR(255),
+    transaction_id VARCHAR(255),
     shipping_method VARCHAR(50),
     shipping_cost DECIMAL(10,2) DEFAULT 0,
     tax DECIMAL(10,2) DEFAULT 0,

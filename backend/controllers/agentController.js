@@ -202,8 +202,8 @@ exports.listAgents = async (req, res) => {
             count: agents.length
         });
     } catch (error) {
+        console.error("List agent error:", error);
         res.status(500).json({
-            console.error("List agent error:", error);
             error: "Failed to fetch lists"
         });
     }

@@ -15,10 +15,10 @@ const {
     changePassword,
     getSecurityAudit,
     getFraudStatus,
-    verify2FA,
-    generate2FA,
-    enable2FA,
-    disable2FA
+    //verify2FA,
+    //generate2FA,
+    //enable2FA,
+    //disable2FA
 } = require("../controllers/authController");
 // ======================== MIDDLEWARE ========================
 const authMiddleware = require("../middleware/authMiddleware");
@@ -301,42 +301,45 @@ router.get(
  * POST /api/auth/verify-2fa
  * Complete login using 2FA TOTP code
  */
-router.post(
+/**router.post(
     "/verify-2fa",
     loginLimiter,
     applyCaptchaCheck,
     verify2FA
-);
+);**/
 
 /**
  * POST /api/auth/2fa/generate
  * Generate 2FA secret (admins only)
  */
-router.post(
+/**router.post(
     "/2fa/generate",
     authMiddleware,
     generate2FA
 );
+**/
 
 /**
  * POST /api/auth/2fa/enable
  * Enable 2FA after scanning QR code
  */
-router.post(
+/**router.post(
     "/2fa/enable",
     authMiddleware,
     enable2FA
 );
+**/
 
 /**
  * POST /api/auth/2fa/disable
  * Disable 2FA
  */
-router.post(
+/**router.post(
     "/2fa/disable",
     authMiddleware,
     disable2FA
 );
+*/
 
 // ======================== ROUTE FALLBACK ========================
 

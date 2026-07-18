@@ -206,6 +206,7 @@ const renderProducts = (container, products, limit = RECENTLY_VIEWED_CONFIG.disp
                     </div>
 
     recentContainer:
+        AppUtils.$("#recently-viewed-count"),
        AppUtils.$("#recently-viewed-count"),
 
     recentCount:

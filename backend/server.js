@@ -125,6 +125,16 @@ app.use(logCompletionMiddleware);
 // Add correlation routes
 app.use('/api/correlation', correlationRoutes);
 
+(async () => {
+  await moduleMaturityService.initialize();
+  app.use('/api/maturity', maturityRoutes);
+
+  await slaService.initialize();
+  app.use('/api/sla', slaRoutes);
+
+  await jaggedFrontierService.initialize();
+  app.use('/api/jagged-frontier', jaggedFrontierRoutes);
+})();
 
 
 // Initialize maturity service
@@ -151,6 +161,7 @@ jaggedFrontierService.initialize().catch(err => {
 
 // Add routes
 app.use('/api/jagged-frontier', jaggedFrontierRoutes);
+
 // Add with other route imports
 // Add with other imports
 const provenanceRoutes = require('./routes/provenanceRoutes');

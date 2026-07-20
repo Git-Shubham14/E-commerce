@@ -44,7 +44,7 @@ const legalRoutes = require('./routes/legalRoutes');
 const aiLegalRoutes = require('./routes/aiLegalRoutes');
 const routes = require("./routes/index");
 const { authLimiter } = require("./middleware/authLimiter");
-const mcpRoutes = require("./routes/mcpRoutes"); 
+const mcpRoutes = require("./routes/mcpRoutes");
 // Add with other imports
 const agentCheckoutRoutes = require('./routes/agentCheckoutRoutes');
 const { agentCheckoutService } = require('./services/agentCheckoutService');
@@ -125,26 +125,43 @@ app.use(logCompletionMiddleware);
 // Add correlation routes
 app.use('/api/correlation', correlationRoutes);
 
+(async () => {
+  await moduleMaturityService.initialize();
+  app.use('/api/maturity', maturityRoutes);
+
+  await slaService.initialize();
+  app.use('/api/sla', slaRoutes);
+
+  await jaggedFrontierService.initialize();
+  app.use('/api/jagged-frontier', jaggedFrontierRoutes);
+})();
 
 
 // Initialize maturity service
-await moduleMaturityService.initialize();
+moduleMaturityService.initialize().catch(err => {
+    console.error('Failed to initialize maturity service:', err);
+});
 
 // Add maturity routes
 app.use('/api/maturity', maturityRoutes);
 
 // Initialize SLA service
-await slaService.initialize();
+slaService.initialize().catch(err => {
+    console.error('Failed to initialize SLA service:', err);
+});
 
 // Add SLA routes
 app.use('/api/sla', slaRoutes);
 
 
 // Initialize service
-await jaggedFrontierService.initialize();
+jaggedFrontierService.initialize().catch(err => {
+    console.error('Failed to initialize jagged frontier service:', err);
+});
 
 // Add routes
 app.use('/api/jagged-frontier', jaggedFrontierRoutes);
+
 // Add with other route imports
 // Add with other imports
 const provenanceRoutes = require('./routes/provenanceRoutes');
@@ -233,6 +250,10 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+// Webhook routes must come BEFORE global body parsers to receive raw body
+const webhookRoutes = require('./routes/webhookRoutes');
+app.use('/api/webhooks', webhookRoutes);
 
 // JSON and URL-encoded body parsers
 app.use(express.json({ limit: "10mb" }));

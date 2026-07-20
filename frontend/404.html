@@ -11,15 +11,15 @@
     >
 
     <!-- SEO -->
-    <link rel="canonical" href="https://e-commerce-git-main-bhuvanshs-projects.vercel.app/success.html">
+    <link rel="canonical" href="https://www.bhuvansh.xyz/404.html">
     <meta
         name="description"
-        content="Your order has been placed successfully at AnthropicBots E-Commerce."
+        content="Page not found at AnthropicBots E-Commerce."
     >
 
     <meta
-        name="keywords"
-        content="order success, ecommerce confirmation, successful purchase"
+        name="robots"
+        content="noindex, follow"
     >
 
     <meta
@@ -28,7 +28,7 @@
     >
 
     <title>
-        Order Success | AnthropicBots E-Commerce
+        Page Not Found | AnthropicBots E-Commerce
     </title>
 
     <!-- Favicon -->
@@ -78,7 +78,7 @@
 
     <link
         rel="stylesheet"
-        href="styles/success.css"
+        href="styles/404.css"
     >
 
     <!-- Icons -->
@@ -96,74 +96,57 @@
 
     <div id="navbar"></div>
 
-    <!-- Success Section -->
+    <!-- 404 Section -->
 
-    <section id="success-page">
+    <section id="notfound-page">
 
-        <div class="success-box">
+        <div class="notfound-box">
 
             <!-- Icon -->
 
-            <div class="success-icon">
+            <div class="notfound-icon">
 
-                <i class="fas fa-check"></i>
+                <i class="fas fa-compass"></i>
 
             </div>
+
+            <!-- Code -->
+
+            <p class="notfound-code">
+
+                404
+
+            </p>
 
             <!-- Title -->
 
             <h2>
 
-                Order Placed Successfully!
+                Page Not Found
 
             </h2>
 
             <p>
 
-                Thank you for shopping with
-                AnthropicBots E-Commerce.
+                The page you're looking for doesn't exist
+                or may have been moved. Let's get you
+                back on track.
 
             </p>
 
-<!-- Order Info -->
-<div class="order-info">
-    <p>
-        <strong>Order ID:</strong>
-        <span id="order-id">ORD-0000</span>
-    </p>
-    <p>
-        <strong>Date:</strong>
-        <span id="order-date"></span>
-    </p>
-    <p>
-        <strong>Status:</strong>
-        <span class="success-status">Confirmed</span>
-    </p>
-    <p>
-        <strong>Total Amount:</strong>
-        <span id="order-total"></span>
-    </p>
-</div>
-
-<!-- Order Items -->
-<div id="order-items-container" style="margin-top:16px; text-align:left;">
-    <strong>Items Ordered:</strong>
-    <ul id="order-items-list" style="margin-top:8px; padding-left:16px;"></ul>
-</div>
-
             <!-- Buttons -->
 
-            <div class="success-buttons">
+            <div class="notfound-buttons">
 
-                <a href="shop.html">
+                <a href="index.html">
 
-                    Continue Shopping
+                    Go to Homepage
 
                 </a>
 
-                <a href="dashboard.html#orders">
+                <a href="shop.html" class="notfound-secondary">
 
-                    View Orders
+                    Browse Shop
 
                 </a>
 
@@ -209,12 +192,6 @@
         src="scripts/components.js"
     ></script>
 
-    <!-- Success Script -->
-
-    <script
-        defer
-        src="scripts/success.js"
-    ></script>
     <script defer src="scripts/ui.js"></script>
 
     <script

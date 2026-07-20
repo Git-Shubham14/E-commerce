@@ -283,8 +283,25 @@ async function fetchProduct() {
         document.body.classList.remove("loading");
     }
 
-    function getCachedProduct() {
-        return AppUtils.getJSON(`product-${productId}`, null);
+    // ===== INITIALIZE IMAGE ZOOM (Lens Effect) =====
+    initializeImageZoom();
+
+    initializeProductGallery(
+        product
+    );
+}
+
+// add to cart
+function addProductToCart(
+    product,
+    redirect = false
+) {
+
+    if (
+        !product
+    ) {
+
+        return;
     }
 
     function cacheProduct(product) {
@@ -647,70 +664,183 @@ async function fetchProduct() {
     function renderProduct(product) {
         if (!product) return;
 
-        // Image
-        if (productElements.mainImage) {
-            productElements.mainImage.src = escapeHTML(product.image || "/assets/images/f1.jpg");
-            productElements.mainImage.alt = escapeHTML(product.name || "Product");
-            productElements.mainImage.onerror = () => {
-                productElements.mainImage.src = "/assets/images/f1.jpg";
-            };
-        }
+// ========================================
+// IMAGE ZOOM / LENS EFFECT (Issue #779)
+// ========================================
 
-        // Category
-        if (productElements.productCategory) {
-            productElements.productCategory.innerText = product.category || "Fashion";
-        }
+function initializeImageZoom() {
+    const wrapper = document.getElementById('mainImageWrapper');
+    const image = document.getElementById('main-product-image');
+    const lens = document.getElementById('imageLens');
+    const zoomResult = document.getElementById('zoomResult');
 
-        // Name
-        if (productElements.productName) {
-            productElements.productName.innerText = product.name || "Product Name";
-        }
-
-        // Price
-        if (productElements.productPrice) {
-            productElements.productPrice.innerText = AppUtils.formatPrice(product.price || 0);
-        }
-
-        // Original Price
-        if (productElements.productOriginalPrice) {
-            const productPrice = parseFloat(product.price || 0);
-            const originalPrice = productPrice + 1000;
-            productElements.productOriginalPrice.innerText = AppUtils.formatPrice(originalPrice);
-        }
-
-        // Discount
-        if (productElements.productDiscount) {
-            productElements.productDiscount.innerText = `${product.discount_percent || 50}% OFF`;
-        }
-
-        // Brand
-        if (productElements.productBrand) {
-            productElements.productBrand.innerText = product.brand || "Fashion";
-        }
-
-        // Description
-        if (productElements.productDescription) {
-            productElements.productDescription.innerText = product.description || "Premium fashion product.";
-        }
-
-        // Stock
-        if (productElements.productStock) {
-            productElements.productStock.innerText = Number(product.stock) > 0 ? "In Stock" : "Out Of Stock";
-        }
-
-        // Page Title
-        document.title = `${product.name} | AnthropicBots E-Commerce`;
+    // If elements don't exist, skip
+    if (!wrapper || !image || !lens || !zoomResult) {
+        console.warn('⚠️ Zoom elements not found, skipping initialization');
+        return;
     }
 
-    // ============================================
-    // IMAGE ZOOM
-    // ============================================
-    function initializeImageZoom() {
-        const mainImage = productElements.mainImage;
-        if (!mainImage) return;
+    // Avoid duplicate initialization
+    if (wrapper.dataset.zoomReady === 'true') {
+        return;
+    }
+    wrapper.dataset.zoomReady = 'true';
 
-        const container = document.getElementById("zoom-container");
-        if (!container) return;
+    // Configuration
+    const ZOOM_FACTOR = 2.5;
+    let lensSize = 150;
+    let isZoomActive = false;
+    let currentImageSrc = image.src;
+
+    // Update lens size based on viewport
+    function updateLensSize() {
+        const width = window.innerWidth;
+        if (width <= 480) {
+            lensSize = 100;
+        } else if (width <= 768) {
+            lensSize = 120;
+        } else {
+            lensSize = 150;
+        }
+        lens.style.width = lensSize + 'px';
+        lens.style.height = lensSize + 'px';
+    }
+
+    // Update zoom background when image changes
+    function updateZoomBackground() {
+        const rect = wrapper.getBoundingClientRect();
+        const bgWidth = rect.width * ZOOM_FACTOR;
+        const bgHeight = rect.height * ZOOM_FACTOR;
+        zoomResult.style.backgroundImage = `url('${currentImageSrc}')`;
+        zoomResult.style.backgroundSize = `${bgWidth}px ${bgHeight}px`;
+        zoomResult.style.backgroundPosition = '50% 50%';
+    }
+
+    // Position lens and zoom result
+    function positionLens(clientX, clientY) {
+        const rect = wrapper.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const wrapperWidth = rect.width;
+        const wrapperHeight = rect.height;
+
+        // Calculate lens position (center on cursor)
+        let lensX = x - (lensSize / 2);
+        let lensY = y - (lensSize / 2);
+
+        // Keep lens within wrapper bounds
+        lensX = Math.max(0, Math.min(lensX, wrapperWidth - lensSize));
+        lensY = Math.max(0, Math.min(lensY, wrapperHeight - lensSize));
+
+        lens.style.left = lensX + 'px';
+        lens.style.top = lensY + 'px';
+
+        // Update zoom result background position
+        const percentX = x / wrapperWidth;
+        const percentY = y / wrapperHeight;
+
+        const bgWidth = wrapperWidth * ZOOM_FACTOR;
+        const bgHeight = wrapperHeight * ZOOM_FACTOR;
+
+        zoomResult.style.backgroundImage = `url('${currentImageSrc}')`;
+        zoomResult.style.backgroundSize = `${bgWidth}px ${bgHeight}px`;
+        zoomResult.style.backgroundPosition = `${percentX * 100}% ${percentY * 100}%`;
+    }
+
+    // Enable zoom
+    function enableZoom() {
+        isZoomActive = true;
+        wrapper.classList.add('zoom-active');
+        updateZoomBackground();
+    }
+
+    // Disable zoom
+    function disableZoom() {
+        isZoomActive = false;
+        wrapper.classList.remove('zoom-active');
+    }
+
+    // ===== DESKTOP EVENTS =====
+    wrapper.addEventListener('mouseenter', enableZoom);
+
+    wrapper.addEventListener('mousemove', (e) => {
+        if (isZoomActive) {
+            positionLens(e.clientX, e.clientY);
+        }
+    });
+
+    wrapper.addEventListener('mouseleave', disableZoom);
+
+    // ===== MOBILE TOUCH EVENTS =====
+    wrapper.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        enableZoom();
+        const touch = e.touches[0];
+        if (touch) {
+            positionLens(touch.clientX, touch.clientY);
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (isZoomActive) {
+            const touch = e.touches[0];
+            if (touch) {
+                positionLens(touch.clientX, touch.clientY);
+            }
+        }
+    }, { passive: false });
+
+    wrapper.addEventListener('touchend', disableZoom);
+
+    // ===== WINDOW RESIZE =====
+    window.addEventListener('resize', () => {
+        updateLensSize();
+        if (isZoomActive) {
+            updateZoomBackground();
+        }
+    });
+
+    // ===== THUMBNAIL CLICK SYNC =====
+    // When thumbnails are clicked, update the zoom image
+    const thumbnails = document.querySelectorAll('.small-image');
+    thumbnails.forEach((thumb) => {
+        thumb.addEventListener('click', () => {
+            const newSrc = thumb.src;
+            if (newSrc && newSrc !== currentImageSrc) {
+                currentImageSrc = newSrc;
+                image.src = newSrc;
+                if (isZoomActive) {
+                    updateZoomBackground();
+                }
+            }
+        });
+    });
+
+    // ===== WATCH FOR MAIN IMAGE CHANGES =====
+    // Observe image src changes (in case it's changed programmatically)
+    const observer = new MutationObserver(() => {
+        if (image.src !== currentImageSrc) {
+            currentImageSrc = image.src;
+            if (isZoomActive) {
+                updateZoomBackground();
+            }
+        }
+    });
+    observer.observe(image, { attributes: true, attributeFilter: ['src'] });
+
+    // Initialize
+    updateLensSize();
+    console.log('✅ Image Zoom initialized successfully');
+}
+
+// ========================================
+// PRODUCT GALLERY (Thumbnails)
+// ========================================
+
+function initializeProductGallery(
+    product
+) {
 
         if (mainImage.dataset.zoomReady) return;
         mainImage.dataset.zoomReady = "true";
@@ -763,7 +893,13 @@ async function fetchProduct() {
         const cap = getStockCap();
         const qty = Math.max(1, Math.min(cap, safeQty(productElements.qtyInput.value)));
 
-        productElements.qtyInput.value = qty;
+// ========================================
+// QUANTITY CONTROLS
+// ========================================
+
+if (
+    productElements.plusBtn
+) {
 
         if (productElements.plusBtn) {
             productElements.plusBtn.disabled = qty >= cap;
@@ -774,12 +910,28 @@ async function fetchProduct() {
         }
     }
 
-    if (productElements.plusBtn) {
-        productElements.plusBtn.addEventListener("click", () => {
-            productElements.qtyInput.value = safeQty(productElements.qtyInput.value) + 1;
-            syncQtyControls();
-        });
-    }
+// ========================================
+// KEYBOARD ACCESSIBILITY
+// ========================================
+
+document.addEventListener(
+    "keydown",
+    (
+        event
+    ) => {
+
+        const activeTag =
+            document.activeElement
+                ?.tagName;
+
+        if (
+            [
+                "INPUT",
+                "TEXTAREA"
+            ].includes(
+                activeTag
+            )
+        ) {
 
     if (productElements.minusBtn) {
         productElements.minusBtn.addEventListener("click", () => {
@@ -828,30 +980,50 @@ async function fetchProduct() {
         });
     }
 
-    // ============================================
-    // EXPOSE GLOBALLY
-    // ============================================
-    window.getCurrentProduct = () => currentProductData;
-    window.handleShare = handleShare;
-    window.initShareButton = initShareButton;
+// ========================================
+// BACK TO TOP BUTTON (Issue #345)
+// ========================================
 
-    // ============================================
-    // MASTER EXECUTION
-    // ============================================
-    document.addEventListener("DOMContentLoaded", () => {
+function initBackToTop() {
+    const backToTopBtn = document.getElementById('back-to-top-btn');
+    if (!backToTopBtn) return;
+
+    // Show/hide button based on scroll position
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            backToTopBtn.classList.add('show');
+            backToTopBtn.style.display = 'flex';
+        } else {
+            backToTopBtn.classList.remove('show');
+            backToTopBtn.style.display = 'none';
+        }
+    });
+
+    // Smooth scroll to top on click
+    backToTopBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+// ========================================
+// INITIALIZATION
+// ========================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
+
         fetchProduct();
-        initBackToTop();
 
-        if (typeof updateCartCount === "function") {
+        if (
+            typeof updateCartCount ===
+            "function"
+        ) {
+
             updateCartCount();
         }
 
-        // 🔥 Ensure share dropdown closes on scroll
-        window.addEventListener('scroll', () => {
-            if (productElements.shareDropdown) {
-                productElements.shareDropdown.style.display = 'none';
-            }
-        });
-    });
+        initBackToTop();
+    }
+);
 
 })();

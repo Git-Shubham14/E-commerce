@@ -245,6 +245,9 @@ router.post("/validate", orderController.validateOrder);
 
 // ==================== USER ENDPOINTS ====================
 
+// Create payment intent
+router.post("/create-payment-intent", authMiddleware, orderController.createPaymentIntent);
+
 // Create order
 router.post("/", authMiddleware, (req, res, next) => {
     const { items, total, paymentMethod } = req.body;
@@ -321,6 +324,9 @@ router.get("/:id/summary", authMiddleware, orderController.getOrderSummary);
 
 // Get single order with items
 router.get("/:id", authMiddleware, orderController.getOrderById);
+
+// Download order invoice
+router.get("/:id/invoice", authMiddleware, orderController.downloadInvoice);
 
 // Cancel order with reason
 router.patch("/:id/cancel", authMiddleware, (req, res, next) => {

@@ -7,6 +7,8 @@ const {
     "../services/order.service"
 );
 
+const paymentService = require("../services/payment.service");
+const { generateInvoicePdf } = require("../services/invoice.service");
 const inventoryReservationService = require("../services/inventoryReservationService");
 
 const {
@@ -629,5 +631,118 @@ module.exports = {
     updateOrderStatus,
     cancelUserOrder,
     validateOrder,
-    getOrderSummary
+    getOrderSummary,
+    downloadInvoice
 };
+
+// download invoice
+const downloadInvoice = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        
+        // Fetch order details
+        const [orders] = await db.query("SELECT * FROM orders WHERE id = ?", [orderId]);
+        if (!orders || orders.length === 0) {
+            return res.status(404).json({ success: false, message: "Order not found" });
+        }
+        const order = orders[0];
+
+        // Authorization: Ensure user is admin or the order belongs to them
+        if (req.user && req.user.role !== 'admin' && order.user_id !== req.user.id) {
+            return res.status(403).json({ success: false, message: "Unauthorized access to order" });
+        }
+
+        // Fetch order items
+        const [items] = await db.query("SELECT * FROM order_items WHERE order_id = ?", [orderId]);
+
+        // Generate PDF
+        const pdfBuffer = await generateInvoicePdf(order, items);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename="invoice-${orderId}.pdf"`);
+        return res.status(200).send(pdfBuffer);
+    } catch (error) {
+        console.error("Error generating invoice:", error);
+        return res.status(500).json({ success: false, message: "Failed to generate invoice" });
+    }
+};
+
+// create payment intent
+const createPaymentIntent = async (req, res) => {
+    let connection;
+    try {
+        connection = await db.getConnection();
+
+        const { customer, address, items, total, promoCode } = req.body;
+
+        if (!customer || !customer.name || !customer.email) {
+            return res.status(400).json({ success: false, message: "Customer information required" });
+        }
+        if (!address || !address.fullAddress) {
+            return res.status(400).json({ success: false, message: "Delivery address required" });
+        }
+        if (!Array.isArray(items) || !items.length) {
+            return res.status(400).json({ success: false, message: "Order items required" });
+        }
+        if (safeNumber(total) <= 0) {
+            return res.status(400).json({ success: false, message: "Invalid order total" });
+        }
+
+        await connection.beginTransaction();
+
+        const result = await createOrderService(connection, {
+            user_id: req.user.id,
+            customer_name: sanitizeString(customer.name),
+            customer_email: sanitizeString(customer.email),
+            customer_phone: sanitizeString(customer.phone),
+            city: sanitizeString(address.city),
+            state: sanitizeString(address.state),
+            zip: sanitizeString(address.zip),
+            full_address: sanitizeString(address.fullAddress),
+            payment_method: 'card',
+            total: safeNumber(total),
+            items,
+            promo_code: promoCode ? sanitizeString(promoCode) : null
+        });
+
+        const locksValid = await inventoryReservationService.validateCartLocks(req.user.id, items, connection);
+        if (!locksValid) {
+            await connection.rollback();
+            return res.status(400).json({ success: false, message: "Inventory locks expired or insufficient stock" });
+        }
+        
+        await inventoryReservationService.consumeLocks(req.user.id, items, connection);
+
+        const [orders] = await connection.query("SELECT final_amount, total FROM orders WHERE id = ?", [result.orderId]);
+        const orderTotal = orders[0].final_amount || orders[0].total;
+
+        const paymentIntentResult = await paymentService.createPaymentIntent(orderTotal, 'usd', { orderId: result.orderId, userId: req.user.id });
+        if (!paymentIntentResult.success) {
+            await connection.rollback();
+            return res.status(500).json({ success: false, message: paymentIntentResult.error });
+        }
+
+        await connection.query("UPDATE orders SET payment_intent_id = ? WHERE id = ?", [paymentIntentResult.paymentIntentId, result.orderId]);
+
+        await connection.commit();
+
+        return res.status(201).json({
+            success: true,
+            clientSecret: paymentIntentResult.clientSecret,
+            orderId: result.orderId
+        });
+
+    } catch (error) {
+        if (connection) {
+            await connection.rollback();
+        }
+        console.error("CREATE PAYMENT INTENT ERROR:", error);
+        return res.status(500).json({ success: false, message: "Failed to create payment intent" });
+    } finally {
+        if (connection) {
+            connection.release();
+        }
+    }
+};
+
+module.exports.createPaymentIntent = createPaymentIntent;

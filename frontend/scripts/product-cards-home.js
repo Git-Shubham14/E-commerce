@@ -31,7 +31,43 @@ function safePrice(
         : parsed;
 }
 
-// render product card
+// ========================================
+// STOCK STATUS HELPERS (Issue #1123)
+// ========================================
+
+function getStockBadgeHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    
+    if (stockNum === 0) {
+        return `<span class="stock-badge out-of-stock">Out of Stock</span>`;
+    } else if (stockNum <= 5) {
+        return `<span class="stock-badge low-stock">Only ${stockNum} left</span>`;
+    } else {
+        return `<span class="stock-badge in-stock">In Stock</span>`;
+    }
+}
+
+function getOutOfStockOverlayHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    if (stockNum === 0) {
+        return `<div class="out-of-stock-overlay">Sold Out</div>`;
+    }
+    return '';
+}
+
+function getLowStockTextHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    if (stockNum > 0 && stockNum <= 5) {
+        return `<span class="low-stock-text">⚡ Hurry! Only ${stockNum} left</span>`;
+    }
+    return '';
+}
+
+function isOutOfStock(stock) {
+    return Number(stock) === 0;
+}
+
+// render product card with stock badge
 function createProductCard(
     product
 ) {
@@ -62,8 +98,13 @@ function createProductCard(
             }
         ).join("");
 
+    // Stock status
+    const stock = Number(product.stock) || 0;
+    const outOfStock = isOutOfStock(stock);
+    const outOfStockClass = outOfStock ? 'out-of-stock' : '';
+
     return `
-        <div class="pro fade-in">
+        <div class="pro ${outOfStockClass} fade-in">
             ${
                 product.featured
                     ? `
@@ -74,20 +115,24 @@ function createProductCard(
                     : ""
             }
 
-            <img
-                src="${
-                    defaultImage(
-                        product.image
-                    )
-                }"
-                alt="${
-                    safeText(
-                        product.name,
-                        "Product"
-                    )
-                }"
-                loading="lazy"
-            >
+            <div class="product-image-wrapper">
+                <img
+                    src="${
+                        defaultImage(
+                            product.image
+                        )
+                    }"
+                    alt="${
+                        safeText(
+                            product.name,
+                            "Product"
+                        )
+                    }"
+                    loading="lazy"
+                >
+                ${getStockBadgeHTML(stock)}
+                ${getOutOfStockOverlayHTML(stock)}
+            </div>
 
             <div class="des">
                 <span>
@@ -122,6 +167,8 @@ function createProductCard(
                     }
                 </h4>
 
+                ${getLowStockTextHTML(stock)}
+
                 <div class="product-actions">
                     <button
                         type="button"
@@ -129,6 +176,7 @@ function createProductCard(
                         data-id="${
                             product.id
                         }"
+                        ${outOfStock ? 'disabled' : ''}
                     >
                         View
                     </button>
@@ -139,21 +187,22 @@ function createProductCard(
                         data-id="${
                             product.id
                         }"
+                        ${outOfStock ? 'disabled' : ''}
                     >
                         Add Cart
                     </button>
 
                     <button
-    type="button"
-    class="compare-btn"
-    data-id="${
-        product.id
-    }"
->
-    Compare
-</button>
+                        type="button"
+                        class="compare-btn"
+                        data-id="${
+                            product.id
+                        }"
+                        ${outOfStock ? 'disabled' : ''}
+                    >
+                        Compare
+                    </button>
 
-                    
                     <button
                         type="button"
                         class="wishlist-btn"
@@ -199,7 +248,6 @@ function renderFeaturedProducts(
                 </p>
             `;
 
-    // Add stagger indices for scroll animation
     requestAnimationFrame(() => {
         const cards = homeFeaturedContainer.querySelectorAll('.pro');
         cards.forEach((card, i) => {
@@ -210,12 +258,10 @@ function renderFeaturedProducts(
             initializeScrollAnimations();
         }
 
-        // Ensure product cards are animated only once per element
         if (typeof addProductCardAnimations === "function") {
             addProductCardAnimations('#featured-products');
         }
 
-        // Ensure above-the-fold cards animate
         const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (!reduce) {
             cards.forEach(card => {
@@ -229,9 +275,6 @@ function renderFeaturedProducts(
     });
 }
 
-
-
-
 // render new arrivals
 function renderNewArrivals(
     products = []
@@ -242,7 +285,6 @@ function renderNewArrivals(
         return;
     }
 
-    // Filter out featured products to match script.js logic
     const arrivals =
         products.filter(
             (product) =>
@@ -262,7 +304,6 @@ function renderNewArrivals(
                 </p>
             `;
 
-    // Force animations for already-visible cards (above-the-fold)
     requestAnimationFrame(() => {
         if (typeof initializeScrollAnimations === "function") {
             initializeScrollAnimations();
@@ -278,10 +319,7 @@ function renderNewArrivals(
     });
 }
 
-
-// after rendering new cards, re-apply scroll animations if available
 function refreshHomeCardAnimations() {
-    // Prefer the dedicated helper (animations.js)
     if (typeof addProductCardAnimations === "function") {
         if (homeFeaturedContainer) {
             addProductCardAnimations("#featured-products");
@@ -292,13 +330,11 @@ function refreshHomeCardAnimations() {
         return;
     }
 
-    // Fallback: re-run observer setup
     if (typeof initializeScrollAnimations === "function") {
         initializeScrollAnimations();
     }
 }
 
-// wrap render functions to trigger animations after DOM updates
 function renderFeaturedProductsWithAnim(products = []) {
     renderFeaturedProducts(products);
     refreshHomeCardAnimations();
@@ -309,7 +345,6 @@ function renderNewArrivalsWithAnim(products = []) {
     refreshHomeCardAnimations();
 }
 
-// expose globally
 window.renderFeaturedProducts =
     renderFeaturedProductsWithAnim;
 
@@ -318,5 +353,3 @@ window.renderNewArrivals =
 
 window.createProductCard =
     createProductCard;
-
-

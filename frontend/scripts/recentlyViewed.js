@@ -1,8 +1,47 @@
 import {
     getJSON,
     $,
-    defaultImage
+    defaultImage,
+    safeText,
+    safePrice,
+    formatPrice
 } from "./utils.js";
+
+// ========================================
+// STOCK STATUS HELPERS (Issue #1123)
+// ========================================
+
+function getStockBadgeHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    
+    if (stockNum === 0) {
+        return `<span class="stock-badge out-of-stock">Out of Stock</span>`;
+    } else if (stockNum <= 5) {
+        return `<span class="stock-badge low-stock">Only ${stockNum} left</span>`;
+    } else {
+        return `<span class="stock-badge in-stock">In Stock</span>`;
+    }
+}
+
+function getOutOfStockOverlayHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    if (stockNum === 0) {
+        return `<div class="out-of-stock-overlay">Sold Out</div>`;
+    }
+    return '';
+}
+
+function getLowStockTextHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    if (stockNum > 0 && stockNum <= 5) {
+        return `<span class="low-stock-text">⚡ Hurry! Only ${stockNum} left</span>`;
+    }
+    return '';
+}
+
+function isOutOfStock(stock) {
+    return Number(stock) === 0;
+}
 
 // LOAD RECENTLY VIEWED PRODUCTS
 const recentlyViewed =
@@ -34,38 +73,46 @@ if (elements.recentCount) {
         recentlyViewed.length;
 }
 
-// DISPLAY PRODUCTS
+// DISPLAY PRODUCTS WITH STOCK BADGES
 if (elements.recentContainer) {
     elements.recentContainer.innerHTML = "";
     if (recentlyViewed.length === 0) {
         renderEmptyState(
-            elements.recentContainer,
+            elements.recentContainer, 
             "No recently viewed products."
         );
     } else {
         recentlyViewed.forEach((product) => {
+            const stock = Number(product.stock) || 0;
+            const outOfStock = isOutOfStock(stock);
+            const outOfStockClass = outOfStock ? 'out-of-stock' : '';
+            
             const div =
                 document.createElement("div");
             div.classList.add(
-                "recent-product-item"
+                "recent-product-item",
+                outOfStockClass
             );
+            
             div.innerHTML = `
-                <img
-                    src="${defaultImage(product.image)}"
-                    alt="${product.name || "Product"}"
-                >
+                <div class="product-image-wrapper" style="position:relative;">
+                    <img
+                        src="${defaultImage(product.image)}"
+                        alt="${product.name || "Product"}"
+                    >
+                    ${getStockBadgeHTML(stock)}
+                    ${getOutOfStockOverlayHTML(stock)}
+                </div>
                 <h4>
                     ${product.name || "Product"}
                 </h4>
                 <p>
-                    ₹${(
-                        parseFloat(product.price) || 0
-                    ).toFixed(2)}
+                    ${formatPrice(safePrice(product.price))}
                 </p>
+                ${getLowStockTextHTML(stock)}
             `;
-            elements.recentContainer.appendChild(
-                div
-            );
+            
+            elements.recentContainer.appendChild(div);
         });
     }
 }

@@ -277,3 +277,70 @@
         justify-content: center;
     }
 }
+
+/* ========================================
+   CLEAR FILTERS BUTTON (Issue #1124)
+   ======================================== */
+
+.clear-filters-wrapper {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    width: 100%;
+}
+
+.clear-filters-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: #e74c3c;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 10px rgba(231, 76, 60, 0.3);
+}
+
+.clear-filters-btn:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+}
+
+.clear-filters-btn:active {
+    transform: translateY(0);
+}
+
+.clear-filters-btn i {
+    font-size: 16px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+    .clear-filters-wrapper {
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .clear-filters-btn {
+        padding: 8px 16px;
+        font-size: 12px;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ===== DARK MODE ===== */
+body.dark-theme .clear-filters-btn {
+    background: #c0392b;
+    box-shadow: 0 2px 10px rgba(192, 57, 43, 0.4);
+}
+
+body.dark-theme .clear-filters-btn:hover {
+    background: #a93226;
+    box-shadow: 0 4px 20px rgba(192, 57, 43, 0.5);
+}

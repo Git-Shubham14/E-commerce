@@ -525,12 +525,10 @@ function setupProductCard(
     }
 }
 
-// SEARCH FILTER
+// SEARCH FILTER (Updated)
 function setupSearch() {
 
-    if (
-        !elements.searchInput
-    ) {
+    if (!elements.searchInput) {
         return;
     }
 
@@ -540,69 +538,40 @@ function setupSearch() {
         "input",
         () => {
 
-            clearTimeout(
-                searchTimeout
-            );
+            clearTimeout(searchTimeout);
 
-            searchTimeout =
-                setTimeout(
-                    () => {
+            searchTimeout = setTimeout(() => {
 
-                        currentSearch =
-                            elements.searchInput.value
-                                .trim();
+                currentSearch = elements.searchInput.value.trim();
+                showAllHoodies = false;
+                fetchProducts(1);
+                updateClearFiltersButton(); // <-- ADD THIS LINE
 
-                        // reset hoodies expansion on new search
-                        showAllHoodies = false;
-
-                        fetchProducts(1);
-
-                    },
-                    400
-                );
+            }, 400);
         }
     );
 }
 
-// CATEGORY FILTER
+// CATEGORY FILTER (Updated)
 function setupCategoryFilters() {
 
-    elements.filterButtons.forEach(
-        (
-            button
-        ) => {
+    elements.filterButtons.forEach(button => {
 
-            button.addEventListener(
-                "click",
-                () => {
+        button.addEventListener("click", () => {
 
-                    elements.filterButtons.forEach(
-                        (
-                            btn
-                        ) => {
+            elements.filterButtons.forEach(btn => {
+                btn.classList.remove("active-filter");
+            });
 
-                            btn.classList.remove(
-                                "active-filter"
-                            );
-                        }
-                    );
+            button.classList.add("active-filter");
 
-                    button.classList.add(
-                        "active-filter"
-                    );
+            currentCategory = button.dataset.category || "all";
+            showAllHoodies = false;
+            fetchProducts(1);
+            updateClearFiltersButton(); // <-- ADD THIS LINE
 
-                    currentCategory =
-                        button.dataset.category
-                        || "all";
-
-                    // reset hoodies expansion when category changes
-                    showAllHoodies = false;
-
-                    fetchProducts(1);
-                }
-            );
-        }
-    );
+        });
+    });
 }
 
 // SORTING
@@ -668,17 +637,15 @@ function applySorting() {
     );
 }
 
-// SORT SELECT
+// SORT SELECT (Updated)
 function setupSorting() {
-    if (
-        !elements.sortSelect
-    ) {
+    if (!elements.sortSelect) {
         return;
     }
-    elements.sortSelect.addEventListener(
-        "change",
-        applySorting
-    );
+    elements.sortSelect.addEventListener("change", () => {
+        applySorting();
+        updateClearFiltersButton(); // <-- ADD THIS LINE
+    });
 }
 
 // PAGINATION UI
@@ -794,14 +761,98 @@ function renderPagination() {
     );
 }
 
-// INITIALIZATION
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-        fetchProducts();
-        setupSearch();
-        setupCategoryFilters();
-        setupSorting();
+// INITIALIZATION (Updated)
+document.addEventListener("DOMContentLoaded", () => {
+    fetchProducts();
+    setupSearch();
+    setupCategoryFilters();
+    setupSorting();
+    setupClearFilters(); // <-- ADD THIS LINE
+    updateClearFiltersButton(); // <-- ADD THIS LINE
+});
+
+// ========================================
+// CLEAR FILTERS BUTTON (Issue #1124)
+// ========================================
+
+// Elements
+const clearFiltersBtn = document.getElementById('clear-filters-btn');
+const searchInput = document.getElementById('search-input');
+const filterButtons = document.querySelectorAll('.filter-btn');
+const sortSelect = document.getElementById('sort-select');
+
+// Check if any filter is active
+function isAnyFilterActive() {
+    const searchValue = searchInput?.value?.trim() || '';
+    const activeCategory = document.querySelector('.filter-btn.active-filter')?.dataset?.category || 'all';
+    const sortValue = sortSelect?.value || 'default';
+    
+    return searchValue !== '' || activeCategory !== 'all' || sortValue !== 'default';
+}
+
+// Show/hide clear filters button
+function updateClearFiltersButton() {
+    if (!clearFiltersBtn) return;
+    
+    if (isAnyFilterActive()) {
+        clearFiltersBtn.style.display = 'inline-flex';
+        clearFiltersBtn.classList.add('show');
+    } else {
+        clearFiltersBtn.style.display = 'none';
+        clearFiltersBtn.classList.remove('show');
     }
-);
+}
+
+// Clear all filters
+function clearAllFilters() {
+    // Clear search
+    if (searchInput) {
+        searchInput.value = '';
+        currentSearch = '';
+    }
+    
+    // Reset category
+    filterButtons.forEach(btn => {
+        btn.classList.remove('active-filter');
+        if (btn.dataset.category === 'all') {
+            btn.classList.add('active-filter');
+        }
+    });
+    currentCategory = 'all';
+    
+    // Reset sort
+    if (sortSelect) {
+        sortSelect.value = 'default';
+    }
+    
+    // Reset state
+    showAllHoodies = false;
+    currentSearch = '';
+    currentCategory = 'all';
+    
+    // Update URL (remove query params)
+    if (window.history && window.history.pushState) {
+        const url = window.location.pathname;
+        window.history.pushState({}, '', url);
+    }
+    
+    // Hide button
+    if (clearFiltersBtn) {
+        clearFiltersBtn.style.display = 'none';
+    }
+    
+    // Reload products
+    fetchProducts(1);
+    
+    // Show notification
+    if (typeof AppUtils !== 'undefined' && AppUtils.notify) {
+        AppUtils.notify('All filters cleared ✅', 'info');
+    }
+}
+
+// Setup clear filters button
+function setupClearFilters() {
+    if (!clearFiltersBtn) return;
+    clearFiltersBtn.addEventListener('click', clearAllFilters);
+}
 })()

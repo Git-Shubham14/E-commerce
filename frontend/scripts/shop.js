@@ -273,10 +273,10 @@ function createProductCard(
         >
             <div style="position: relative;">
                 <img
-                    src="${AppUtils.defaultImage(product.image)}"
-                    alt="${displayName}"
-                    loading="lazy"
-                >
+    src="${AppUtils.defaultImage(product.image)}"
+    alt="${escapeHTML(displayName || 'Product image')}"
+    loading="lazy"
+>
                 ${badgeHTML}
                 ${overlayHTML}
             </div>

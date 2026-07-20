@@ -713,11 +713,7 @@ function renderProduct(
                 "/assets/images/f1.jpg"
             );
 
-        productElements.mainImage.alt =
-            escapeHTML(
-                product.name
-                || "Product"
-            );
+        productElements.mainImage.alt = escapeHTML(product.name || "Product image");
 
         productElements.mainImage.onerror =
             () => {

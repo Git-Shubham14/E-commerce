@@ -1,34 +1,18 @@
 // featured products container
-const homeFeaturedContainer =
-    document.getElementById(
-        "featured-products"
-    );
+const homeFeaturedContainer = document.getElementById("featured-products");
 
 // new arrivals container
-const homeArrivalsContainer =
-    document.getElementById(
-        "new-arrivals-container"
-    );
+const homeArrivalsContainer = document.getElementById("new-arrivals-container");
 
 // safe helpers
-function safeText(
-    value,
-    fallback = ""
-) {
-    return String(
-        value ?? fallback
-    );
+function safeText(value, fallback = "") {
+  return String(value ?? fallback);
 }
 
-function safePrice(
-    value
-) {
-    const parsed =
-        parseFloat(value);
+function safePrice(value) {
+  const parsed = parseFloat(value);
 
-    return isNaN(parsed)
-        ? 0
-        : parsed;
+  return isNaN(parsed) ? 0 : parsed;
 }
 
 // ========================================
@@ -136,21 +120,11 @@ function createProductCard(
 
             <div class="des">
                 <span>
-                    ${
-                        safeText(
-                            product.category,
-                            "Fashion"
-                        )
-                    }
+                    ${safeText(product.brand || product.category, "Fashion")}
                 </span>
 
                 <h5>
-                    ${
-                        safeText(
-                            product.name,
-                            "Product"
-                        )
-                    }
+                    ${safeText(product.name, "Product")}
                 </h5>
 
                 <div class="star">
@@ -158,13 +132,7 @@ function createProductCard(
                 </div>
 
                 <h4>
-                    ${
-                        formatPrice(
-                            safePrice(
-                                product.price
-                            )
-                        )
-                    }
+                    ${formatPrice(safePrice(product.price))}
                 </h4>
 
                 ${getLowStockTextHTML(stock)}
@@ -180,7 +148,6 @@ function createProductCard(
                     >
                         View
                     </button>
-
                     <button
                         type="button"
                         class="add-cart-btn"
@@ -191,7 +158,6 @@ function createProductCard(
                     >
                         Add Cart
                     </button>
-
                     <button
                         type="button"
                         class="compare-btn"
@@ -205,44 +171,54 @@ function createProductCard(
 
                     <button
                         type="button"
-                        class="wishlist-btn"
+                        class="wishlist-btn secondary-action"
                         data-id="${product.id}"
-                        aria-label="Add to Wishlist"
                     >
-                        <i class="${ AppUtils.getWishlist().some(item => String(item.id) === String(product.id)) ? 'fas' : 'far' } fa-heart"></i>
+                        <i class="${isWishlisted ? "fas" : "far"} fa-heart"></i>
+                        Wishlist
                     </button>
-
                 </div>
+                    `
+                    : ""
+                }
+            </div>
+        </div>`;
+}
+
+// render skeleton cards
+function renderSkeletonCards(containerId, count = 4) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    let skeletons = "";
+    for (let i = 0; i < count; i++) {
+        skeletons += `
+        <div class="pro skeleton-wrapper">
+            <div class="skeleton skeleton-img"></div>
+            <div class="des">
+                <div class="skeleton skeleton-text short"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text price"></div>
             </div>
         </div>
-    `;
+        `;
+    }
+    container.innerHTML = skeletons;
 }
 
 // render featured products
-function renderFeaturedProducts(
-    products = []
-) {
-    if (
-        !homeFeaturedContainer
-    ) {
-        return;
-    }
+function renderFeaturedProducts(products = []) {
+  if (!homeFeaturedContainer) {
+    return;
+  }
 
-    const featured =
-        products.filter(
-            (product) =>
-                product.featured
-        );
+  const featured = products.filter((product) => product.featured);
+  const wishlistIds = new Set(AppUtils.getWishlist().map((item) => String(item.id)));
 
-    homeFeaturedContainer.innerHTML =
-        featured.length
-            ? featured
-                .slice(0, 8)
-                .map(
-                    createProductCard
-                )
-                .join("")
-            : `
+  homeFeaturedContainer.innerHTML = featured.length
+    ? featured.slice(0, 8).map((product) => createProductCard(product, wishlistIds)).join("")
+    : `
                 <p class="empty-products">
                     No featured products found
                 </p>
@@ -273,7 +249,6 @@ function renderFeaturedProducts(
             });
         }
     });
-}
 
 // render new arrivals
 function renderNewArrivals(
@@ -333,16 +308,23 @@ function refreshHomeCardAnimations() {
     if (typeof initializeScrollAnimations === "function") {
         initializeScrollAnimations();
     }
+    return;
+  }
+
+  // Fallback: re-run observer setup
+  if (typeof initializeScrollAnimations === "function") {
+    initializeScrollAnimations();
+  }
 }
 
 function renderFeaturedProductsWithAnim(products = []) {
-    renderFeaturedProducts(products);
-    refreshHomeCardAnimations();
+  renderFeaturedProducts(products);
+  refreshHomeCardAnimations();
 }
 
 function renderNewArrivalsWithAnim(products = []) {
-    renderNewArrivals(products);
-    refreshHomeCardAnimations();
+  renderNewArrivals(products);
+  refreshHomeCardAnimations();
 }
 
 window.renderFeaturedProducts =

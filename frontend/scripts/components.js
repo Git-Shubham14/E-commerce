@@ -963,52 +963,34 @@ const initializeToyMegaMenu = async () => {
     showSubcategoryProducts(defaultLink);
 };
 
-const initializeStationeryMegaMenu = async () => {
-    if (!stationerySubcategoryLinks.length || !stationeryProductPreview) {
-        return;
-    }
-
-    let stationeryProducts = [];
-
-    const showSubcategoryProducts = (link) => {
-        const subcategory =
-            link.dataset.stationerySubcategory ||
-            link.textContent.trim();
-        const products = stationeryProducts.filter((product) =>
-            matchesStationerySubcategory(product, subcategory)
-        );
-
-        setActiveStationerySubcategory(link);
-        renderStationeryProducts(products, subcategory);
-    };
-
-    stationerySubcategoryLinks.forEach((link) => {
-        link.addEventListener("mouseenter", () => {
-            showSubcategoryProducts(link);
-        });
-
-        link.addEventListener("focus", () => {
-            showSubcategoryProducts(link);
-        });
-    });
-
-    stationeryProducts = await fetchMegaMenuProducts();
-
-    const defaultLink =
-        stationerySubcategoryLinks.find((link) =>
-            link.dataset.stationerySubcategory === currentSubcategory
-        ) || stationerySubcategoryLinks[0];
-
-    showSubcategoryProducts(defaultLink);
-};
+let menuHoverTimeout = null;
 
 const setCategoryMenuOpen = (isOpen) => {
     if (!categoryMenuItem || !categoryMenuToggle) {
         return;
     }
 
+    if (menuHoverTimeout) {
+        clearTimeout(menuHoverTimeout);
+        menuHoverTimeout = null;
+    }
+
     categoryMenuItem.classList.toggle("is-open", isOpen);
     categoryMenuToggle.setAttribute("aria-expanded", String(isOpen));
+
+    if (categoryMenuDropdown) {
+        categoryMenuDropdown.setAttribute("aria-hidden", String(!isOpen));
+    }
+};
+
+const scheduleCategoryMenuOpen = (isOpen, delay = 150) => {
+    if (menuHoverTimeout) {
+        clearTimeout(menuHoverTimeout);
+        menuHoverTimeout = null;
+    }
+    menuHoverTimeout = setTimeout(() => {
+        setCategoryMenuOpen(isOpen);
+    }, delay);
 };
 
 const activateMegaCategory = (categoryId) => {
@@ -1016,6 +998,7 @@ const activateMegaCategory = (categoryId) => {
         const isActive = category.dataset.megaCategory === categoryId;
 
         category.classList.toggle("is-active", isActive);
+        category.setAttribute("aria-selected", String(isActive));
         category.setAttribute("aria-expanded", String(isActive));
     });
 
@@ -1146,15 +1129,24 @@ categoryMenuToggle?.addEventListener("click", (event) => {
     );
 });
 
+categoryMenuToggle?.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowDown" || event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        setCategoryMenuOpen(true);
+        const activeCat = megaMenuCategories.find((cat) => cat.classList.contains("is-active")) || megaMenuCategories[0];
+        activeCat?.focus();
+    }
+});
+
 categoryMenuItem?.addEventListener("mouseenter", () => {
     if (window.matchMedia("(min-width: 1025px)").matches) {
-        setCategoryMenuOpen(true);
+        scheduleCategoryMenuOpen(true, 120);
     }
 });
 
 categoryMenuItem?.addEventListener("mouseleave", () => {
     if (window.matchMedia("(min-width: 1025px)").matches) {
-        setCategoryMenuOpen(false);
+        scheduleCategoryMenuOpen(false, 220);
     }
 });
 
@@ -1171,14 +1163,21 @@ megaMenuCategories.forEach((category) => {
     });
 
     category.addEventListener("keydown", (event) => {
-        if (event.key === "ArrowDown" || event.key === "ArrowRight") {
+        if (event.key === "ArrowDown") {
             event.preventDefault();
             focusMegaCategoryByOffset(category, 1);
         }
 
-        if (event.key === "ArrowUp" || event.key === "ArrowLeft") {
+        if (event.key === "ArrowUp") {
             event.preventDefault();
             focusMegaCategoryByOffset(category, -1);
+        }
+
+        if (event.key === "ArrowRight") {
+            event.preventDefault();
+            const activePanel = document.querySelector(`.mega-menu-panel[data-mega-panel="${category.dataset.megaCategory}"]`);
+            const firstLink = activePanel?.querySelector("a, button");
+            firstLink?.focus();
         }
 
         if (event.key === "Home") {
@@ -1194,11 +1193,35 @@ megaMenuCategories.forEach((category) => {
             lastCategory?.focus();
             activateMegaCategory(lastCategory?.dataset.megaCategory);
         }
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+            setCategoryMenuOpen(false);
+            categoryMenuToggle?.focus();
+        }
     });
 });
 
-categoryMenuDropdown?.addEventListener("click", (event) => {
-    event.stopPropagation();
+megaMenuPanels.forEach((panel) => {
+    panel.addEventListener("keydown", (event) => {
+        if (event.key === "ArrowLeft") {
+            event.preventDefault();
+            const activeCat = megaMenuCategories.find((cat) => cat.dataset.megaCategory === panel.dataset.megaPanel);
+            activeCat?.focus();
+        }
+
+        if (event.key === "Escape") {
+            event.preventDefault();
+            setCategoryMenuOpen(false);
+            categoryMenuToggle?.focus();
+        }
+    });
+});
+
+categoryMenuDropdown?.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+        setCategoryMenuOpen(false);
+    });
 });
 
 categoryMenuItem?.addEventListener("focusout", (event) => {

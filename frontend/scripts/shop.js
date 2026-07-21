@@ -1008,16 +1008,22 @@ function setupFilterControls() {
     );
 
     [elements.minPriceRange, elements.maxPriceRange].forEach((range) => {
-        range?.addEventListener(
-            "input",
-            () => {
-                priceTouched = true;
-                applyFilters({
-                    resetPage: true
-                });
-            }
-        );
-    });
+  range?.addEventListener("input", () => {
+    if (range === elements.minPriceRange && elements.minPriceNumber) {
+      elements.minPriceNumber.value = range.value;
+    }
+    if (range === elements.maxPriceRange && elements.maxPriceNumber) {
+      elements.maxPriceNumber.value = range.value;
+    }
+    priceTouched = true;
+    applyFilters({ resetPage: true });
+  });
+});
+
+[elements.minPriceNumber, elements.maxPriceNumber].forEach((numInput) => {
+  numInput?.addEventListener("input", () => applyFilters({ resetPage: true }));
+  numInput?.addEventListener("change", () => applyFilters({ resetPage: true }));
+});
 
     document.querySelectorAll('input[name="rating-filter"], input[name="availability-filter"]')
         .forEach((input) => {

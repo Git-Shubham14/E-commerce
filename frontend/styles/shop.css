@@ -878,6 +878,39 @@ body.dark-theme .filter-close {
 }
 
 body.dark-theme .clear-filters-btn {
-  background: #088178;
-  color: #ffffff;
+    background: #088178;
+    color: #ffffff;
+}
+
+.price-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.price-number-input {
+    width: 72px;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #333;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.price-number-input:focus {
+    outline: 2px solid #088178;
+    outline-offset: 1px;
+    border-color: #088178;
+}
+
+.price-input-row input[type="range"] {
+    flex: 1;
+}
+
+body.dark-theme .price-number-input {
+    background: #2a2a2a;
+    border-color: #444;
+    color: #ccc;
 }

@@ -103,6 +103,40 @@ const getProducts = async (req, res) => {
             ? toBooleanModeQuery(rawSearch)
             : "";
 
+        const rawMinPrice =
+            req.query.minPrice ?? req.query.min;
+        const rawMaxPrice =
+            req.query.maxPrice ?? req.query.max;
+        const minPrice =
+            rawMinPrice !== undefined && rawMinPrice !== ""
+                ? safeNumber(rawMinPrice, null)
+                : null;
+        const maxPrice =
+            rawMaxPrice !== undefined && rawMaxPrice !== ""
+                ? safeNumber(rawMaxPrice, null)
+                : null;
+
+        if (minPrice !== null && (minPrice < 0 || !Number.isFinite(minPrice))) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid minimum price"
+            });
+        }
+
+        if (maxPrice !== null && (maxPrice < 0 || !Number.isFinite(maxPrice))) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid maximum price"
+            });
+        }
+
+        if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+            return res.status(400).json({
+                success: false,
+                message: "Minimum price cannot be greater than maximum price"
+            });
+        }
+
         // Resolve sort against the whitelist; unknown/empty falls back to newest.
         const orderByClause =
             SORT_CLAUSES[sanitizeString(req.query.sort)] || DEFAULT_SORT_CLAUSE;
@@ -166,6 +200,16 @@ const getProducts = async (req, res) => {
                     conditions.push("name LIKE ?");
                     params.push(likeSearch);
                 }
+            }
+
+            if (minPrice !== null) {
+                conditions.push("price >= ?");
+                params.push(minPrice);
+            }
+
+            if (maxPrice !== null) {
+                conditions.push("price <= ?");
+                params.push(maxPrice);
             }
 
             const whereClause = conditions.length

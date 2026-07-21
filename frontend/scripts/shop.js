@@ -230,6 +230,14 @@ function buildProductsQuery(page) {
         params.set("sort", filters.sort);
     }
 
+    if (priceTouched && Number.isFinite(Number(filters.minPrice))) {
+        params.set("minPrice", String(filters.minPrice));
+    }
+
+    if (priceTouched && Number.isFinite(Number(filters.maxPrice))) {
+        params.set("maxPrice", String(filters.maxPrice));
+    }
+
     return `/products?${params.toString()}`;
 }
 

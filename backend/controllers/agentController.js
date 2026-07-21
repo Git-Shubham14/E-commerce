@@ -139,7 +139,7 @@ exports.getTransactions = async (req, res) => {
         console.error("Transaction agent error:", error);
         res.status(500).json({
             error: "Failed to fetch transaction"
-        });``
+        });
     }
 };
 

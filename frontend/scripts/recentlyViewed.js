@@ -145,14 +145,20 @@ const escapeHTML = (text) => {
 const renderEmptyState = (container, message = 'No recently viewed products yet.') => {
     if (!container) return;
     
+    container.style.justifyContent = 'center';
+    const wrapper = container.closest('.carousel-wrapper');
+    if (wrapper) {
+        const btns = wrapper.querySelectorAll('.carousel-btn');
+        btns.forEach(btn => btn.style.display = 'none');
+    }
+
     container.innerHTML = `
-        <div class="empty-state-card recent-empty">
-            <div class="empty-icon">👁️</div>
+        <div class="empty-state-card recent-empty" style="flex: 1; margin: 0 auto; width: 100%; max-width: 400px; text-align: center; padding: 40px 20px;">
+            <div class="empty-icon" style="font-size: 3rem; margin-bottom: 15px; color: #ccc;">👁️</div>
             <h3>No Recently Viewed Products</h3>
-            <p>${escapeHTML(message)}</p>
-            <p class="empty-subtext">Browse products and they will appear here!</p>
-            <a href="/shop.html" class="empty-state-btn">
-                🛍️ Start Shopping
+            <p style="margin-bottom: 20px; color: #777;">${escapeHTML(message)}</p>
+            <a href="shop.html" class="primary" style="display: inline-block; padding: 12px 24px; background: var(--primary-color); color: white; border-radius: 4px; text-decoration: none; font-weight: 600;">
+                Start Shopping
             </a>
         </div>
     `;
@@ -247,32 +253,6 @@ const renderProducts = (container, products, limit = RECENTLY_VIEWED_CONFIG.disp
                             ${product.category ? `<span class="product-category">${escapeHTML(product.category)}</span>` : ''}
                         </div>
                     </div>
-
-    recentContainer:
-        AppUtils.$("#recently-viewed-count"),
-       AppUtils.$("#recently-viewed-count"),
-
-    recentCount:
-        AppUtils.$("#recently-viewed-count")
-};
-
-// EMPTY STATE HELPER
-const renderEmptyState = (container, message) => {
-    if (container) {
-        container.style.justifyContent = 'center';
-        const wrapper = container.closest('.carousel-wrapper');
-        if (wrapper) {
-            const btns = wrapper.querySelectorAll('.carousel-btn');
-            btns.forEach(btn => btn.style.display = 'none');
-        }
-        container.innerHTML = `
-            <div class="empty-state-card recent-empty" style="flex: 1; margin: 0 auto; width: 100%; max-width: 400px; text-align: center; padding: 40px 20px;">
-                <div class="empty-icon" style="font-size: 3rem; margin-bottom: 15px; color: #ccc;">👁</div>
-                <h3>No Recently Viewed Products</h3>
-                <p style="margin-bottom: 20px; color: #777;">${message}</p>
-                <a href="shop.html" class="primary" style="display: inline-block; padding: 12px 24px; background: var(--primary-color); color: white; border-radius: 4px; text-decoration: none; font-weight: 600;">
-                    Start Shopping
-
                 </a>
                 <div class="product-actions">
                     <button onclick="addToCart('${productId}')" class="add-to-cart-btn">

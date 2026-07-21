@@ -65,6 +65,31 @@ function cacheProduct(
 }
 
 // ========================================
+// TRACK RECENTLY VIEWED PRODUCTS (Issue #1126)
+// ========================================
+
+function trackRecentlyViewed(productId) {
+    if (!productId) return;
+    
+    // Get existing recently viewed IDs from localStorage
+    let recentlyViewed = AppUtils.getJSON('recentlyViewed', []);
+    
+    // Remove if already exists (to move to front)
+    recentlyViewed = recentlyViewed.filter(id => id !== productId);
+    
+    // Add to front
+    recentlyViewed.unshift(productId);
+    
+    // Keep only last 10
+    if (recentlyViewed.length > 10) {
+        recentlyViewed = recentlyViewed.slice(0, 10);
+    }
+    
+    // Save to localStorage
+    AppUtils.setJSON('recentlyViewed', recentlyViewed);
+}
+
+// ========================================
 // Breadcrumb Navigation (Issue #344)
 // ========================================
 function updateBreadcrumb(product) {
@@ -229,8 +254,37 @@ async function fetchProduct() {
             .replace(/'/g, "&#039;");
     }
 
-    function safeQty(value) {
-        return Math.max(1, parseInt(value, 10) || 1);
+    // Update breadcrumb
+    updateBreadcrumb(product);
+
+    // ===== TRACK RECENTLY VIEWED (Issue #1126) =====
+    trackRecentlyViewed(product.id);
+
+    // out of stock
+    if (
+        Number(
+            product.stock
+        ) <= 0
+    ) {
+
+        if (
+            productElements.addToCartBtn
+        ) {
+
+            productElements.addToCartBtn.disabled =
+                true;
+
+            productElements.addToCartBtn.innerText =
+                "Out of Stock";
+        }
+
+        if (
+            productElements.buyNowBtn
+        ) {
+
+            productElements.buyNowBtn.disabled =
+                true;
+        }
     }
 
     renderProduct(

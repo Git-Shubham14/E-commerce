@@ -15,52 +15,107 @@ function safePrice(value) {
   return isNaN(parsed) ? 0 : parsed;
 }
 
-// render product card
-function createProductCard(product, wishlistIds = null, options = {}) {
-  const rating = Math.min(5, Math.max(0, Number(product.rating || 4)));
-  const showActions = options.showActions !== false;
-  const compactClass = options.compact ? " product-card-compact" : "";
+// ========================================
+// STOCK STATUS HELPERS (Issue #1123)
+// ========================================
 
-  const stars = Array.from(
-    {
-      length: 5,
-    },
-    (_, index) => {
-      return `
-                    <i class="fas fa-star${index < rating ? "" : "-o"}"></i>
+function getStockBadgeHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    
+    if (stockNum === 0) {
+        return `<span class="stock-badge out-of-stock">Out of Stock</span>`;
+    } else if (stockNum <= 5) {
+        return `<span class="stock-badge low-stock">Only ${stockNum} left</span>`;
+    } else {
+        return `<span class="stock-badge in-stock">In Stock</span>`;
+    }
+}
+
+function getOutOfStockOverlayHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    if (stockNum === 0) {
+        return `<div class="out-of-stock-overlay">Sold Out</div>`;
+    }
+    return '';
+}
+
+function getLowStockTextHTML(stock) {
+    const stockNum = Number(stock) || 0;
+    if (stockNum > 0 && stockNum <= 5) {
+        return `<span class="low-stock-text">⚡ Hurry! Only ${stockNum} left</span>`;
+    }
+    return '';
+}
+
+function isOutOfStock(stock) {
+    return Number(stock) === 0;
+}
+
+// render product card with stock badge
+function createProductCard(
+    product
+) {
+    const rating =
+        Math.min(
+            5,
+            Math.max(
+                0,
+                Number(
+                    product.rating || 4
+                )
+            )
+        );
+
+    const stars =
+        Array.from(
+            {
+                length: 5
+            },
+            (_, index) => {
+                return `
+                    <i class="fas fa-star${
+                        index < rating
+                            ? ""
+                            : "-o"
+                    }"></i>
                 `;
-    },
-  ).join("");
+            }
+        ).join("");
 
-  const isWishlisted = (wishlistIds instanceof Set)
-    ? wishlistIds.has(String(product.id))
-    : AppUtils.getWishlist().some((item) => String(item.id) === String(product.id));
+    // Stock status
+    const stock = Number(product.stock) || 0;
+    const outOfStock = isOutOfStock(stock);
+    const outOfStockClass = outOfStock ? 'out-of-stock' : '';
 
-  const badgeHtml = product.featured
-    ? `<span class="product-badge">Featured</span>`
-    : product.sale
-    ? `<span class="product-badge badge-sale">Sale</span>`
-    : product.new
-    ? `<span class="product-badge badge-new">New</span>`
-    : product.trending
-    ? `<span class="product-badge badge-trending">Trending</span>`
-    : "";
-
-  return `
-        <div class="pro fade-in${compactClass}" data-id="${product.id}">
-            ${badgeHtml}
+    return `
+        <div class="pro ${outOfStockClass} fade-in">
+            ${
+                product.featured
+                    ? `
+                        <span class="product-badge">
+                            Featured
+                        </span>
+                    `
+                    : ""
+            }
 
             <div class="product-image-wrapper">
                 <img
-                    src="${defaultImage(product.image)}"
-                    alt="${safeText(product.name, "Product")}"
+                    src="${
+                        defaultImage(
+                            product.image
+                        )
+                    }"
+                    alt="${
+                        safeText(
+                            product.name,
+                            "Product"
+                        )
+                    }"
                     loading="lazy"
                 >
-                <div class="product-overlay">
-                    <button class="quick-view-btn" data-id="${product.id}">
-                        <i class="far fa-eye"></i> Quick View
-                    </button>
-                </div>
+                ${getStockBadgeHTML(stock)}
+                ${getOutOfStockOverlayHTML(stock)}
             </div>
 
             <div class="des">
@@ -80,30 +135,38 @@ function createProductCard(product, wishlistIds = null, options = {}) {
                     ${formatPrice(safePrice(product.price))}
                 </h4>
 
-                ${
-                  showActions
-                    ? `
+                ${getLowStockTextHTML(stock)}
+
                 <div class="product-actions">
                     <button
                         type="button"
-                        class="view-product-btn primary-action"
-                        data-id="${product.id}"
+                        class="view-product-btn"
+                        data-id="${
+                            product.id
+                        }"
+                        ${outOfStock ? 'disabled' : ''}
                     >
                         View
                     </button>
                     <button
                         type="button"
-                        class="add-cart-btn primary-action"
-                        data-id="${product.id}"
+                        class="add-cart-btn"
+                        data-id="${
+                            product.id
+                        }"
+                        ${outOfStock ? 'disabled' : ''}
                     >
                         Add Cart
                     </button>
                     <button
                         type="button"
-                        class="compare-btn secondary-action"
-                        data-id="${product.id}">
-                            <i class="fas fa-balance-scale"></i>
-                            Compare
+                        class="compare-btn"
+                        data-id="${
+                            product.id
+                        }"
+                        ${outOfStock ? 'disabled' : ''}
+                    >
+                        Compare
                     </button>
 
                     <button
@@ -161,58 +224,89 @@ function renderFeaturedProducts(products = []) {
                 </p>
             `;
 
-  // Add stagger indices for scroll animation
-  requestAnimationFrame(() => {
-    const cards = homeFeaturedContainer.querySelectorAll(".pro");
+    requestAnimationFrame(() => {
+        const cards = homeFeaturedContainer.querySelectorAll('.pro');
+        cards.forEach((card, i) => {
+            card.setAttribute('data-anim-index', String(i));
+        });
 
-    cards.forEach((card, i) => {
-      card.setAttribute("data-anim-index", String(i));
+        if (typeof initializeScrollAnimations === "function") {
+            initializeScrollAnimations();
+        }
+
+        if (typeof addProductCardAnimations === "function") {
+            addProductCardAnimations('#featured-products');
+        }
+
+        const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!reduce) {
+            cards.forEach(card => {
+                const rect = card.getBoundingClientRect();
+                const inView = rect.top < window.innerHeight * 0.85 && rect.bottom > 0;
+                if (inView) {
+                    card.classList.add('in-view');
+                }
+            });
+        }
     });
 
-    if (typeof addProductCardAnimations === "function") {
-      addProductCardAnimations("#featured-products");
-    }
-  });
-}
-
 // render new arrivals
-function renderNewArrivals(products = []) {
-  if (!homeArrivalsContainer) {
-    return;
-  }
+function renderNewArrivals(
+    products = []
+) {
+    if (
+        !homeArrivalsContainer
+    ) {
+        return;
+    }
 
-  // Filter out featured products to match script.js logic
-  const arrivals = products
-    .filter((product) => Number(product.featured) !== 1)
-    .slice(0, 8);
+    const arrivals =
+        products.filter(
+            (product) =>
+                Number(product.featured) !== 1
+        ).slice(0, 8);
 
-  const wishlistIds = new Set(AppUtils.getWishlist().map((item) => String(item.id)));
-
-  homeArrivalsContainer.innerHTML = arrivals.length
-    ? arrivals.map((product) => createProductCard(product, wishlistIds)).join("")
-    : `
+    homeArrivalsContainer.innerHTML =
+        arrivals.length
+            ? arrivals
+                .map(
+                    createProductCard
+                )
+                .join("")
+            : `
                 <p class="empty-products">
                     No new arrivals found
                 </p>
             `;
 
-  // Force animations for already-visible cards (above-the-fold)
-  requestAnimationFrame(() => {
-    if (typeof addProductCardAnimations === "function") {
-      addProductCardAnimations("#new-arrivals-container");
-    }
-  });
+    requestAnimationFrame(() => {
+        if (typeof initializeScrollAnimations === "function") {
+            initializeScrollAnimations();
+        }
+        const cards = homeArrivalsContainer.querySelectorAll('.pro');
+        cards.forEach(card => {
+            const rect = card.getBoundingClientRect();
+            const inView = rect.top < window.innerHeight * 0.85 && rect.bottom > 0;
+            if (inView) {
+                card.classList.add('in-view');
+            }
+        });
+    });
 }
 
-// after rendering new cards, re-apply scroll animations if available
 function refreshHomeCardAnimations() {
-  // Prefer the dedicated helper (animations.js)
-  if (typeof addProductCardAnimations === "function") {
-    if (homeFeaturedContainer) {
-      addProductCardAnimations("#featured-products");
+    if (typeof addProductCardAnimations === "function") {
+        if (homeFeaturedContainer) {
+            addProductCardAnimations("#featured-products");
+        }
+        if (homeArrivalsContainer) {
+            addProductCardAnimations("#new-arrivals-container");
+        }
+        return;
     }
-    if (homeArrivalsContainer) {
-      addProductCardAnimations("#new-arrivals-container");
+
+    if (typeof initializeScrollAnimations === "function") {
+        initializeScrollAnimations();
     }
     return;
   }
@@ -223,7 +317,6 @@ function refreshHomeCardAnimations() {
   }
 }
 
-// wrap render functions to trigger animations after DOM updates
 function renderFeaturedProductsWithAnim(products = []) {
   renderFeaturedProducts(products);
   refreshHomeCardAnimations();
@@ -234,9 +327,11 @@ function renderNewArrivalsWithAnim(products = []) {
   refreshHomeCardAnimations();
 }
 
-// expose globally
-window.renderFeaturedProducts = renderFeaturedProductsWithAnim;
+window.renderFeaturedProducts =
+    renderFeaturedProductsWithAnim;
 
-window.renderNewArrivals = renderNewArrivalsWithAnim;
+window.renderNewArrivals =
+    renderNewArrivalsWithAnim;
 
-window.createProductCard = createProductCard;
+window.createProductCard =
+    createProductCard;

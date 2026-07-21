@@ -394,29 +394,7 @@ function renderStars(
     ).join("");
 }
 
-function getReviewCount(product) {
-    return Number(
-        product?.num_reviews ??
-        product?.numReviews ??
-        product?.reviewCount ??
-        0
-    );
-}
-
-function getRatingLabel(product) {
-    const count = getReviewCount(product);
-    const rating = Number(product.rating || 0);
-
-    if (!count) {
-        return "No reviews yet";
-    }
-
-    const reviewLabel = count === 1 ? "review" : "reviews";
-
-    return `${rating.toFixed(1)} (${count} ${reviewLabel})`;
-}
-
-// PRODUCT CARD
+// PRODUCT CARD with Stock Badge (Issue #1123)
 function createProductCard(
     product
 ) {
@@ -426,6 +404,44 @@ function createProductCard(
 
     const stock =
         Number(product.stock) || 0;
+    
+    const isOutOfStock = stock === 0;
+    const isLowStock = stock > 0 && stock <= 5;
+    const outOfStockClass = isOutOfStock ? 'out-of-stock' : '';
+
+    // Stock Badge HTML
+    let badgeHTML = '';
+    if (isOutOfStock) {
+        badgeHTML = `<span class="stock-badge out-of-stock">Out of Stock</span>`;
+    } else if (isLowStock) {
+        badgeHTML = `<span class="stock-badge low-stock">Only ${stock} left</span>`;
+    } else {
+        badgeHTML = `<span class="stock-badge in-stock">In Stock</span>`;
+    }
+
+    // Out of Stock Overlay
+    let overlayHTML = '';
+    if (isOutOfStock) {
+        overlayHTML = `<div class="out-of-stock-overlay">Sold Out</div>`;
+    }
+
+    // Low Stock Text
+    let lowStockText = '';
+    if (isLowStock && !isOutOfStock) {
+        lowStockText = `<span class="low-stock-text">⚡ Hurry! Only ${stock} left</span>`;
+    }
+
+    // Action Buttons (disabled if out of stock)
+    const actionButtons = isOutOfStock ? '' : `
+        <div style="position: absolute; bottom: 20px; right: 12px; display: flex; gap: 8px; z-index: 2;">
+            <button class="wishlist-btn-shop cart" data-id="${product.id}" aria-label="Add to Wishlist" style="position: relative; bottom: 0; right: 0;">
+                <i class="${ AppUtils.getWishlist().some(item => String(item.id) === String(product.id)) ? 'fas' : 'far' } fa-heart"></i>
+            </button>
+            <button class="add-to-cart-icon cart" aria-label="Add to cart" style="position: relative; bottom: 0; right: 0;">
+                <i class="fal fa-shopping-cart"></i>
+            </button>
+        </div>
+    `;
 
     const escapedName =
         AppUtils.escapeHTML(
@@ -445,14 +461,18 @@ function createProductCard(
 
     return `
         <div
-            class="pro"
-            data-product-id="${escapedId}"
+            class="pro ${outOfStockClass}"
+            data-product-id="${product.id}"
         >
-            <img
-                src="${AppUtils.escapeHTML(getProductImageSrc(product.image))}"
-                alt="${escapedName}"
-                loading="lazy"
-            >
+            <div style="position: relative;">
+                <img
+                    src="${AppUtils.defaultImage(product.image)}"
+                    alt="${displayName}"
+                    loading="lazy"
+                >
+                ${badgeHTML}
+                ${overlayHTML}
+            </div>
 
             <div class="des">
                 <span>
@@ -475,36 +495,10 @@ function createProductCard(
                         product.price
                     )}
                 </h4>
-                <p class="stock-info">
-                    ${
-                        stock > 0
-                            ? `Stock: ${stock}`
-                            : "Out Of Stock"
-                    }
-                </p>
+                ${lowStockText}
             </div>
 
-            ${
-                stock <= 0
-                    ? `
-                        <button
-                            class="out-stock-btn"
-                            disabled
-                        >
-                            Out Of Stock
-                        </button>
-                    `
-                    : `
-                        <div class="shop-card-actions">
-                            <button class="wishlist-btn-shop cart" data-id="${escapedId}" aria-label="Add ${escapedName} to wishlist">
-                                <i class="${wishlistIconClass} fa-heart"></i>
-                            </button>
-                            <button class="add-to-cart-icon cart" aria-label="Add ${escapedName} to cart">
-                                <i class="fal fa-shopping-cart"></i>
-                            </button>
-                        </div>
-                    `
-            }
+            ${actionButtons}
         </div>
     `;
 }

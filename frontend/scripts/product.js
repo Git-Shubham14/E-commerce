@@ -545,10 +545,7 @@ function addProductToCart(
         // 🔥 Initialize Share Button
         initShareButton(product);
 
-        // Clamp quantity controls
-        if (typeof window.syncProductQtyControls === "function") {
-            window.syncProductQtyControls();
-        }
+        productElements.mainImage.alt = escapeHTML(product.name || "Product image");
 
         if (typeof loadProductReviews === "function") {
             loadProductReviews(product.id);

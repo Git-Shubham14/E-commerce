@@ -101,19 +101,10 @@ function createProductCard(
 
             <div class="product-image-wrapper">
                 <img
-                    src="${
-                        defaultImage(
-                            product.image
-                        )
-                    }"
-                    alt="${
-                        safeText(
-                            product.name,
-                            "Product"
-                        )
-                    }"
-                    loading="lazy"
-                >
+    src="${defaultImage(product.image)}"
+    alt="${escapeHTML(product.name || 'Product image')}"
+    loading="lazy"
+>
                 ${getStockBadgeHTML(stock)}
                 ${getOutOfStockOverlayHTML(stock)}
             </div>

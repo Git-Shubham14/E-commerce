@@ -614,7 +614,9 @@ function renderEmptyCart() {
                 <i class="fas fa-shopping-cart fa-3x"></i>
                 <h2>Your cart is empty</h2>
                 <p>Start shopping to add items to your cart</p>
-                <a href="/shop" class="shop-now-btn">Shop Now</a>
+                <a href="shop.html" class="continue-shopping-btn empty-cart-cta">
+                    Continue Shopping
+                </a>
             </div>
         `;
     }

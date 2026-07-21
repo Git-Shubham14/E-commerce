@@ -800,6 +800,8 @@ function updatePriceControls() {
 
     minPriceRange.value = filters.minPrice;
     maxPriceRange.value = filters.maxPrice;
+    if (elements.minPriceNumber) elements.minPriceNumber.value = filters.minPrice;
+    if (elements.maxPriceNumber) elements.maxPriceNumber.value = filters.maxPrice;
 
     if (priceOutput) {
         priceOutput.textContent =
@@ -817,10 +819,13 @@ function readFiltersFromControls() {
         ).map((input) => input.value);
 
     const minPrice =
-        Number(elements.minPriceRange?.value ?? priceBounds.min);
-
+        Number(elements.minPriceNumber?.value || elements.minPriceRange?.value || priceBounds.min);
+        
     const maxPrice =
-        Number(elements.maxPriceRange?.value ?? priceBounds.max);
+        Number(elements.maxPriceNumber?.value || elements.maxPriceRange?.value || priceBounds.max);
+        
+    if (elements.minPriceRange) elements.minPriceRange.value = minPrice;
+    if (elements.maxPriceRange) elements.maxPriceRange.value = maxPrice;
 
     filters.minPrice =
         Math.min(minPrice, maxPrice);
@@ -1197,16 +1202,22 @@ function setupFilterControls() {
     );
 
     [elements.minPriceRange, elements.maxPriceRange].forEach((range) => {
-        range?.addEventListener(
-            "input",
-            () => {
-                priceTouched = true;
-                applyFilters({
-                    resetPage: true
-                });
-            }
-        );
-    });
+  range?.addEventListener("input", () => {
+    if (range === elements.minPriceRange && elements.minPriceNumber) {
+      elements.minPriceNumber.value = range.value;
+    }
+    if (range === elements.maxPriceRange && elements.maxPriceNumber) {
+      elements.maxPriceNumber.value = range.value;
+    }
+    priceTouched = true;
+    applyFilters({ resetPage: true });
+  });
+});
+
+[elements.minPriceNumber, elements.maxPriceNumber].forEach((numInput) => {
+  numInput?.addEventListener("input", () => applyFilters({ resetPage: true }));
+  numInput?.addEventListener("change", () => applyFilters({ resetPage: true }));
+});
 
     document.querySelectorAll('input[name="rating-filter"], input[name="availability-filter"]')
         .forEach((input) => {
@@ -1391,6 +1402,8 @@ document.addEventListener(
         elements.categoryList = document.getElementById("category-filter-list");
         elements.minPriceRange = document.getElementById("min-price-range");
         elements.maxPriceRange = document.getElementById("max-price-range");
+        elements.minPriceNumber = document.getElementById("min-price-number"); 
+        elements.maxPriceNumber = document.getElementById("max-price-number");
         elements.priceOutput = document.getElementById("price-range-output");
         elements.sortSelect = document.getElementById("product-sort");
         elements.productContainer = document.getElementById("product-container");

@@ -269,17 +269,39 @@
                 <legend>Price</legend>
                 <div class="price-filter">
                     <label for="min-price-range">Minimum price</label>
-                    <input
-                        type="range"
-                        id="min-price-range"
-                        name="min-price"
-                    >
+                    <div class="price-input-row">
+                        <input
+                            type="number"
+                            id="min-price-number"
+                            class="price-number-input"
+                            placeholder="Min"
+                            min="0"
+                            step="1"
+                            aria-label="Minimum price"
+                        >
+                        <input
+                            type="range"
+                            id="min-price-range"
+                            name="min-price"
+                        >
+                    </div>
                     <label for="max-price-range">Maximum price</label>
-                    <input
-                        type="range"
-                        id="max-price-range"
-                        name="max-price"
-                    >
+                    <div class="price-input-row">
+                        <input
+                            type="number"
+                            id="max-price-number"
+                            class="price-number-input"
+                            placeholder="Max"
+                            min="0"
+                            step="1"
+                            aria-label="Maximum price"
+                        >
+                        <input
+                            type="range"
+                            id="max-price-range"
+                            name="max-price"
+                        >
+                    </div>
                     <p
                         id="price-range-output"
                         class="price-range-output"

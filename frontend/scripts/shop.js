@@ -663,39 +663,10 @@ function setupProductCard(
     }
 }
 
-function initializeFilterControls() {
-    const utils =
-        getFilterUtils();
+// SEARCH FILTER (Updated)
+function setupSearch() {
 
-    priceBounds =
-        utils.getPriceBounds(
-            allProducts
-        );
-
-    filters = {
-        ...filters,
-        minPrice: priceBounds.min,
-        maxPrice: priceBounds.max,
-        sort: elements.sortSelect?.value || "newest"
-    };
-
-    renderCategoryFilters();
-    applyUrlCategoryFilters();
-    updatePriceControls();
-}
-
-function getUrlCategoryFilters() {
-    const params =
-        new URLSearchParams(globalThis.location.search);
-
-    return {
-        category: params.get("category") || "",
-        subcategory: params.get("subcategory") || ""
-    };
-}
-
-function applyUrlCategoryFilters() {
-    if (hasAppliedUrlFilters) {
+    if (!elements.searchInput) {
         return;
     }
 
@@ -707,183 +678,40 @@ function applyUrlCategoryFilters() {
     filters.megaCategory = category;
     filters.megaSubcategory = subcategory;
 
-    if (category) {
-        const matchingCategoryInput =
-            Array.from(
-                document.querySelectorAll('input[name="category-filter"]')
-            ).find((input) => input.value === category);
+            clearTimeout(searchTimeout);
 
-        if (matchingCategoryInput) {
-            matchingCategoryInput.checked = true;
-            filters.categories = [category];
-        }
-    }
+            searchTimeout = setTimeout(() => {
 
-    hasAppliedUrlFilters = true;
-}
+                currentSearch = elements.searchInput.value.trim();
+                showAllHoodies = false;
+                fetchProducts(1);
+                updateClearFiltersButton(); // <-- ADD THIS LINE
 
-function renderCategoryFilters() {
-    if (!elements.categoryList) {
-        return;
-    }
-
-    // Preserve the user's ticked categories across catalog re-renders (the
-    // list grows as more pages stream in via infinite scroll).
-    const checkedValues =
-        new Set(
-            Array.from(
-                document.querySelectorAll('input[name="category-filter"]:checked')
-            ).map((input) => input.value)
-        );
-
-    const categories =
-        getFilterUtils().uniqueCategories(
-            allProducts
-        );
-
-    elements.categoryList.innerHTML =
-        categories.map(
-            (category) => `
-                <label>
-                    <input
-                        type="checkbox"
-                        name="category-filter"
-                        value="${AppUtils.escapeHTML(category)}"
-                        ${checkedValues.has(category) ? "checked" : ""}
-                    >
-                    ${AppUtils.escapeHTML(category)}
-                </label>
-            `
-        ).join("");
-}
-
-// Refresh derived controls after each streamed page without clobbering the
-// user's active selections. Price bounds only auto-widen while the user hasn't
-// manually adjusted the sliders.
-function refreshFilterControls() {
-    priceBounds =
-        getFilterUtils().getPriceBounds(
-            allProducts
-        );
-
-    if (!priceTouched) {
-        filters.minPrice = priceBounds.min;
-        filters.maxPrice = priceBounds.max;
-    }
-
-    renderCategoryFilters();
-    updatePriceControls();
-}
-
-function updatePriceControls() {
-    const {
-        minPriceRange,
-        maxPriceRange,
-        priceOutput
-    } = elements;
-
-    if (!minPriceRange || !maxPriceRange) {
-        return;
-    }
-
-    [minPriceRange, maxPriceRange].forEach((range) => {
-        range.min = priceBounds.min;
-        range.max = priceBounds.max;
-        range.step = 1;
-    });
-
-    minPriceRange.value = filters.minPrice;
-    maxPriceRange.value = filters.maxPrice;
-    if (elements.minPriceNumber) elements.minPriceNumber.value = filters.minPrice;
-    if (elements.maxPriceNumber) elements.maxPriceNumber.value = filters.maxPrice;
-
-    if (priceOutput) {
-        priceOutput.textContent =
-            `${AppUtils.formatPrice(filters.minPrice)} - ${AppUtils.formatPrice(filters.maxPrice)}`;
-    }
-}
-
-function readFiltersFromControls() {
-    filters.search =
-        elements.searchInput?.value.trim() || "";
-
-    filters.categories =
-        Array.from(
-            document.querySelectorAll('input[name="category-filter"]:checked')
-        ).map((input) => input.value);
-
-    const minPrice =
-        Number(elements.minPriceNumber?.value || elements.minPriceRange?.value || priceBounds.min);
-        
-    const maxPrice =
-        Number(elements.maxPriceNumber?.value || elements.maxPriceRange?.value || priceBounds.max);
-        
-    if (elements.minPriceRange) elements.minPriceRange.value = minPrice;
-    if (elements.maxPriceRange) elements.maxPriceRange.value = maxPrice;
-
-    filters.minPrice =
-        Math.min(minPrice, maxPrice);
-
-    filters.maxPrice =
-        Math.max(minPrice, maxPrice);
-
-    filters.rating =
-        Number(
-            document.querySelector('input[name="rating-filter"]:checked')?.value || 0
-        );
-
-    filters.availability =
-        Array.from(
-            document.querySelectorAll('input[name="availability-filter"]:checked')
-        ).map((input) => input.value);
-
-    filters.sort =
-        elements.sortSelect?.value || "newest";
-}
-
-function applyFilters({ resetPage = false } = {}) {
-    const utils =
-        getFilterUtils();
-
-    readFiltersFromControls();
-
-    // Sort is the server-driven dimension. When it changes, the accumulated
-    // pages are ordered by the old key, so restart streaming from page 1 with
-    // the new sort to keep pagination consistent.
-    if (filters.sort !== lastServerSort) {
-        lastServerSort = filters.sort;
-        resetCatalog();
-        loadNextProductsPage();
-        return;
-    }
-
-    filteredProducts =
-        utils.sortProducts(
-            utils.filterProducts(
-                allProducts,
-                filters
-            ),
-            filters.sort
-        );
-
-    updatePriceControls();
-    updateResultsSummary();
-    renderProducts(
-        filteredProducts,
-        {
-            emptyMessage:
-                isFetchingPage
-                    ? "Loading products..."
-                    : filters.megaCategory || filters.megaSubcategory
-                        ? "No products available in this category."
-                        : "No products found."
+            }, 400);
         }
     );
-    renderScrollStatus();
+}
 
-    // A filter change can leave the sentinel on screen with more pages
-    // available; pull them so filtering reflects the full catalog.
-    maybeAutoLoadMore();
+// CATEGORY FILTER (Updated)
+function setupCategoryFilters() {
+
+    elements.filterButtons.forEach(button => {
+
+        button.addEventListener("click", () => {
+
+            elements.filterButtons.forEach(btn => {
+                btn.classList.remove("active-filter");
+            });
+
+            button.classList.add("active-filter");
+
+            currentCategory = button.dataset.category || "all";
+            showAllHoodies = false;
+            fetchProducts(1);
+            updateClearFiltersButton(); // <-- ADD THIS LINE
+
+        });
+    });
 }
 
 function updateResultsSummary() {
@@ -1053,31 +881,15 @@ function chooseSuggestion(button) {
     });
 }
 
-function showSearchSuggestions() {
-    if (!elements.searchInput) {
+// SORT SELECT (Updated)
+function setupSorting() {
+    if (!elements.sortSelect) {
         return;
     }
-
-    const query =
-        elements.searchInput.value.trim();
-
-    if (!query) {
-        renderSuggestionList(
-            searchHistory,
-            {
-                isHistory: true
-            }
-        );
-        return;
-    }
-
-    renderSuggestionList(
-        getFilterUtils().getSuggestions(
-            allProducts,
-            query,
-            6
-        )
-    );
+    elements.sortSelect.addEventListener("change", () => {
+        applySorting();
+        updateClearFiltersButton(); // <-- ADD THIS LINE
+    });
 }
 
 function setupSearch() {
@@ -1311,141 +1123,98 @@ function setupFilterDrawer() {
     );
 }
 
-// INFINITE SCROLL UI
-// The `#pagination` section holds the loading indicator, an end-of-results
-// note, and the sentinel element the IntersectionObserver watches.
-function renderScrollStatus() {
-    let statusBar =
-        document.getElementById("pagination");
+// INITIALIZATION (Updated)
+document.addEventListener("DOMContentLoaded", () => {
+    fetchProducts();
+    setupSearch();
+    setupCategoryFilters();
+    setupSorting();
+    setupClearFilters(); // <-- ADD THIS LINE
+    updateClearFiltersButton(); // <-- ADD THIS LINE
+});
 
-    if (!statusBar) {
-        statusBar =
-            document.createElement("section");
-        statusBar.id = "pagination";
-        elements.productContainer?.after(statusBar);
-    }
+// ========================================
+// CLEAR FILTERS BUTTON (Issue #1124)
+// ========================================
 
-    const hasResults =
-        filteredProducts.length > 0;
+// Elements
+const clearFiltersBtn = document.getElementById('clear-filters-btn');
+const searchInput = document.getElementById('search-input');
+const filterButtons = document.querySelectorAll('.filter-btn');
+const sortSelect = document.getElementById('sort-select');
 
-    let statusMarkup = "";
-
-    if (isFetchingPage) {
-        statusMarkup = `
-            <div class="scroll-loader" role="status" aria-live="polite">
-                <span class="scroll-spinner" aria-hidden="true"></span>
-                <span>Loading more products…</span>
-            </div>
-        `;
-    } else if (catalogExhausted && !serverHasNext && hasResults) {
-        statusMarkup = `
-            <p class="scroll-end" role="status">
-                You've reached the end of the catalog.
-            </p>
-        `;
-    }
-
-    statusBar.innerHTML = `
-        ${statusMarkup}
-        <div id="product-scroll-sentinel" class="scroll-sentinel" aria-hidden="true"></div>
-    `;
-
-    observeSentinel();
-}
-
-// (Re)attach the observer to the current sentinel node. The sentinel is
-// recreated on every status render, so it must be re-observed each time.
-function observeSentinel() {
-    if (!productObserver) {
-        return;
-    }
-
-    const sentinel =
-        document.getElementById("product-scroll-sentinel");
-
-    if (sentinel) {
-        productObserver.observe(sentinel);
-    }
-}
-
-function setupProductObserver() {
-    if (productObserver || typeof IntersectionObserver === "undefined") {
-        return;
-    }
-
-    productObserver =
-        new IntersectionObserver(
-            (entries) => {
-                if (entries.some((entry) => entry.isIntersecting)) {
-                    loadNextProductsPage();
-                }
-            },
-            {
-                rootMargin: "200px 0px"
-            }
-        );
-}
-
-// INITIALIZATION
-document.addEventListener(
-    "DOMContentLoaded",
-    () => {
-        elements.searchForm = document.getElementById("shop-search-form");
-        elements.searchInput = document.getElementById("search-input");
-        elements.suggestions = document.getElementById("search-suggestions");
-        elements.categoryList = document.getElementById("category-filter-list");
-        elements.minPriceRange = document.getElementById("min-price-range");
-        elements.maxPriceRange = document.getElementById("max-price-range");
-        elements.minPriceNumber = document.getElementById("min-price-number"); 
-        elements.maxPriceNumber = document.getElementById("max-price-number");
-        elements.priceOutput = document.getElementById("price-range-output");
-        elements.sortSelect = document.getElementById("product-sort");
-        elements.productContainer = document.getElementById("product-container");
-        elements.resultsSummary = document.getElementById("results-summary");
-        elements.filterSidebar = document.getElementById("filter-sidebar");
-        elements.filterBackdrop = document.getElementById("filter-backdrop");
-        elements.mobileFilterToggle = document.getElementById("mobile-filter-toggle");
-        elements.closeFilterSidebar = document.getElementById("close-filter-sidebar");
-        elements.clearFilters = document.getElementById("clear-filters");
-
-        setupSearch();
-        setupFilterControls();
-        setupFilterDrawer();
-        fetchProducts();
-         // Category card click filter
-        document.querySelectorAll(".fashion-card").forEach((card) => {
-            card.addEventListener("click", () => {
-                const category = card.dataset.category;
-                let checkbox = document.querySelector(
-                    `input[name="category-filter"][value="${category}"]`
-                );
-
-                resetCategoryCheckboxes();
-
-                if (!checkbox && elements.categoryList) {
-                    // Create checkbox dynamically if it doesn't exist
-                    const label = document.createElement("label");
-                    label.innerHTML = `
-                        <input
-                            type="checkbox"
-                            name="category-filter"
-                            value="${AppUtils.escapeHTML(category)}"
-                        >
-                        ${AppUtils.escapeHTML(category)}
-                    `;
-                    elements.categoryList.appendChild(label);
-                    checkbox = label.querySelector("input");
-                }
-
-                if (checkbox) {
-                    checkbox.checked = true;
-                    applyFilters({ resetPage: true });
-                    document.getElementById("product-container")
-                        ?.scrollIntoView({ behavior: "smooth" });
-                }
-            });
-        });
-    }
-);
+// Check if any filter is active
+function isAnyFilterActive() {
+    const searchValue = searchInput?.value?.trim() || '';
+    const activeCategory = document.querySelector('.filter-btn.active-filter')?.dataset?.category || 'all';
+    const sortValue = sortSelect?.value || 'default';
     
+    return searchValue !== '' || activeCategory !== 'all' || sortValue !== 'default';
+}
+
+// Show/hide clear filters button
+function updateClearFiltersButton() {
+    if (!clearFiltersBtn) return;
+    
+    if (isAnyFilterActive()) {
+        clearFiltersBtn.style.display = 'inline-flex';
+        clearFiltersBtn.classList.add('show');
+    } else {
+        clearFiltersBtn.style.display = 'none';
+        clearFiltersBtn.classList.remove('show');
+    }
+}
+
+// Clear all filters
+function clearAllFilters() {
+    // Clear search
+    if (searchInput) {
+        searchInput.value = '';
+        currentSearch = '';
+    }
+    
+    // Reset category
+    filterButtons.forEach(btn => {
+        btn.classList.remove('active-filter');
+        if (btn.dataset.category === 'all') {
+            btn.classList.add('active-filter');
+        }
+    });
+    currentCategory = 'all';
+    
+    // Reset sort
+    if (sortSelect) {
+        sortSelect.value = 'default';
+    }
+    
+    // Reset state
+    showAllHoodies = false;
+    currentSearch = '';
+    currentCategory = 'all';
+    
+    // Update URL (remove query params)
+    if (window.history && window.history.pushState) {
+        const url = window.location.pathname;
+        window.history.pushState({}, '', url);
+    }
+    
+    // Hide button
+    if (clearFiltersBtn) {
+        clearFiltersBtn.style.display = 'none';
+    }
+    
+    // Reload products
+    fetchProducts(1);
+    
+    // Show notification
+    if (typeof AppUtils !== 'undefined' && AppUtils.notify) {
+        AppUtils.notify('All filters cleared ✅', 'info');
+    }
+}
+
+// Setup clear filters button
+function setupClearFilters() {
+    if (!clearFiltersBtn) return;
+    clearFiltersBtn.addEventListener('click', clearAllFilters);
+}
 })()

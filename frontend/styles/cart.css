@@ -297,6 +297,22 @@ body.dark-theme #continue-shopping-btn:hover {
     opacity: 0.9;
     transform: translateY(-2px);
 }
+
+.empty-cart-cta{
+    margin-top: 24px;
+    min-width: 220px;
+    padding: 16px 28px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 12px 24px rgba(8, 129, 120, 0.2);
+}
+
+.empty-cart-cta:hover{
+    opacity: 1;
+    background: #066d66;
+    box-shadow: 0 16px 30px rgba(8, 129, 120, 0.26);
+}
 body.dark-theme .cart-container,
 body.dark-theme .cart-items,
 body.dark-theme .order-summary {

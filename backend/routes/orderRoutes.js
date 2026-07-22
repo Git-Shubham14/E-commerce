@@ -343,39 +343,28 @@ router.patch("/:id/cancel", authMiddleware, (req, res, next) => {
 
 // ==================== ADMIN ENDPOINTS ====================
 
-// Export orders as CSV
-router.get("/export/csv", authMiddleware, authorizeRoles("admin", "support"), (req, res, next) => {
-    const errors = [];
-
-    // Validate status filter
-    if (req.query.status) {
-        const statusValidation = validateStatus(req.query.status);
-        if (!statusValidation.valid) {
-            errors.push(...statusValidation.errors);
+// Export orders as CSV (admin/support)
+router.get(
+    "/export/csv",
+    authMiddleware,
+    authorizeRoles("admin", "support"),
+    (req, res, next) => {
+        if (req.query.status) {
+            const statusValidation = validateStatus(req.query.status);
+            if (!statusValidation.valid) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Validation failed",
+                    details: statusValidation.errors
+                });
+            }
         }
-
         next();
     },
-    orderController.createOrder
+    orderController.exportOrders
 );
 
-// get current user orders
-router.get(
-    "/my-orders",
-    authMiddleware,
-    orderController.getUserOrders
-);
-
-// get single order
-router.get(
-    "/:id",
-    authMiddleware,
-    orderController.getOrderById
-);
-
-// ========================================
 // GET ORDER STATUS (Issue #778)
-// ========================================
 router.get(
     "/:id/status",
     authMiddleware,
@@ -386,61 +375,17 @@ router.get(
 router.get(
     "/",
     authMiddleware,
-    authorizeRoles(
-        "admin"
-    ),
+    authorizeRoles("admin"),
     orderController.getAllOrders
 );
 
-// update order status
+// update order status (admin)
 router.put(
     "/:id/status",
     authMiddleware,
-    authorizeRoles(
-        "admin"
-    ),
-    (
-        req,
-        res,
-        next
-    ) => {
-
-        const {
-            status
-        } = req.body;
-
-        const allowedStatuses = [
-
-            "pending",
-
-            "processing",
-
-            "shipped",
-
-            "delivered",
-
-            "cancelled"
-        ];
-
-        if (
-            !allowedStatuses.includes(
-                sanitizeString(
-                    status
-                ).toLowerCase()
-            )
-        ) {
-
-            return res.status(400)
-                .json({
-
-                    success: false,
-
-                    message:
-                        "Invalid order status"
-                });
-        }
-
-        // Validate status
+    authorizeRoles("admin"),
+    (req, res, next) => {
+        const { status } = req.body;
         const statusValidation = validateStatus(status);
         if (!statusValidation.valid) {
             return res.status(400).json({
@@ -449,34 +394,11 @@ router.put(
                 details: statusValidation.errors
             });
         }
+        next();
+    },
+    orderController.updateOrderStatus
+);
 
-        const results = [];
-        for (const orderId of orderIds) {
-            try {
-                const result = await orderController.updateOrderStatusService(
-                    orderId,
-                    status,
-                    req.user.id
-                );
-                results.push({ orderId, success: true, result });
-            } catch (error) {
-                results.push({ orderId, success: false, error: error.message });
-            }
-        }
-
-        res.status(200).json({
-            success: true,
-            message: "Bulk status update completed",
-            results
-        });
-
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-});
 
 // ==================== 404 FALLBACK ====================
 

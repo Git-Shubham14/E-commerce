@@ -693,6 +693,60 @@ const createPaymentIntent = async (req, res) => {
     }
 };
 
+// export orders as CSV (admin/support)
+const exportOrders = async (req, res) => {
+    try {
+        const { status } = req.query;
+        let query = `
+            SELECT 
+                id, 
+                user_id, 
+                customer_name, 
+                customer_email, 
+                customer_phone, 
+                city, 
+                state, 
+                zip, 
+                full_address, 
+                payment_method, 
+                total, 
+                status, 
+                created_at
+            FROM orders
+        `;
+        const params = [];
+
+        if (status) {
+            query += " WHERE status = ?";
+            params.push(status.trim().toLowerCase());
+        }
+
+        query += " ORDER BY created_at DESC";
+
+        const [orders] = await db.query(query, params);
+
+        const { Parser } = require('json2csv');
+        const fields = [
+            'id', 'user_id', 'customer_name', 'customer_email', 'customer_phone',
+            'city', 'state', 'zip', 'full_address', 'payment_method', 'total', 'status', 'created_at'
+        ];
+        
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(safeArray(orders));
+
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename=orders_${Date.now()}.csv`);
+        return res.status(200).send(csv);
+
+    } catch (error) {
+        console.error("CSV EXPORT ERROR:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to export orders as CSV"
+        });
+    }
+};
+
 module.exports = {
     createOrder,
     getAllOrders,
@@ -704,5 +758,7 @@ module.exports = {
     validateOrder,
     getOrderSummary,
     downloadInvoice,
-    createPaymentIntent
+    createPaymentIntent,
+    exportOrders
 };
+

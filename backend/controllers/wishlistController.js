@@ -153,14 +153,15 @@ const wishlistController = {
     checkWishlistStatus: async (req, res) => {
         try {
             const userId = req.user.id;
-            const productId = safeNumber(req.params.productId);
+            const productId = safeUUID(req.params.productId);
 
-            if (!productId || productId < 1) {
+            if (!productId) {
                 return res.status(400).json({
                     success: false,
                     message: "Valid product ID is required"
                 });
             }
+
 
             const [rows] = await promisePool.query(
                 "SELECT id FROM wishlist_items WHERE user_id = ? AND product_id = ?",
